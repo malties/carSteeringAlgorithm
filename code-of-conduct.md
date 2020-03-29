@@ -21,3 +21,7 @@ We plan to hold digital meetings two to three times a week, where we update each
 We also plan on staying in touch through Facebook Messenger.  Meetings will be held via Discord.
 
 ## How will we solve conflicts?
+
+Depending on the type of conflict, whether it’s a personal issue or a disagreement over how a problem or task should be solved, 
+we will start with a discussion between the people involved. If it cannot be resolved in this way, we will discuss the problem as a group,
+and if it is something pertaining to implementation, we will vote as a group on what we believe the best decision will be.

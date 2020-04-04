@@ -6,14 +6,14 @@ In order to be able to clone the repository, an SSH key is necessary. The steps 
    2. Run ssh-keygen with the preferred encryption type (RSA / ED25519).
    3. Copy your public key that has been generated and paste it into Gitlab under Your SSH Keys.
    4. Navigate into a folder where you intend to clone the repository. Do 
-        $ git clone git@git.chalmers.se:courses/dit638/students/group_06.git
-   5. Configure your Git authentication using 
-        $ git config user.email " ... " 
+        *$ git clone git@git.chalmers.se:courses/dit638/students/group_06.git*
+   5. Configure your Git authentication using
+        *$ git config user.email " ... "*
     and 
-        $ git config user.name " ... "
+        *$ git config user.name " ... "*
    6. To run the program, follow the commands:
-        $ docker load < *(in this case)* miruna-example.tar.gz
-        $ docker run --rm miruna/example:latest 42
+        *$ docker load < miruna-example.tar.gz*
+        *$ docker run --rm miruna/example:latest 42*
 
         This should print that 42 is not a prime number.
 

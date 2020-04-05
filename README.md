@@ -17,7 +17,7 @@ In order to be able to clone the repository, an SSH key is necessary. The steps 
         <br>
         *$ docker run --rm miruna/example:latest 42*
 
-        This should print that 42 is not a prime number.
+        This should print 0, meaning 42 is not a prime number.
 
 ## Working conventions and policies
    1. Features should be added only upon group discussions and agreement to improve the system.

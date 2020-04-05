@@ -10,7 +10,7 @@ In order to be able to clone the repository, an SSH key is necessary. The steps 
    5. Configure your Git authentication using <br>
         *$ git config user.email " ... "* <br>
     and <br>
-        *$ git config user.name " ... "*
+        *$ git config user.name " ... "*   
    6. To run the program, follow the commands:
         <br>
         *$ docker load < miruna-example.tar.gz*

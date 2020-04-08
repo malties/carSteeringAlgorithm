@@ -47,5 +47,5 @@ release:
     - docker-build
   stage: deploy
   script:
-    - docker build -f ./source_code/Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" ./source_code/
+    - docker build -f ./source_code/Dockerfile ./source_code/ -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" 
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"

@@ -38,8 +38,6 @@ build-and-test:
   stage: build
   script:
     - docker build -f ./source_code/Dockerfile ./source_code/
-  only:
-    - branches
   except:
     - tags
 

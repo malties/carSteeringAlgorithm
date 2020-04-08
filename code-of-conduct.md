@@ -1,8 +1,11 @@
 ## How to plan to collaborate
 
-We plan on using pair programming as a way of collaboration. 
-Both pairs would communicate with each other to keep track of the progress of the project. 
-A meeting is held per each assignment or problem, where we would break down the assignment into subproblems or tasks, and each pair assigns themselves to tasks and responsibilities.
+We plan on using a more Waterfall style of of development for this project, as opposed to an agile method, so following this we will create 
+an initial plan that we intend to use for the duration of this project, which will not change significantly with the exception of if our decided method 
+will not work, not a good implementation, etc.
+We plan on using pair programming as a way of collaboration. Both pairs would communicate with each other 
+to keep track of the progress of the project. A meeting is held per each assignment or problem, where we would 
+break down the assignment into subproblems or tasks, and each pair assigns themselves to tasks and responsibilities. 
 
 ## How do we ensure that everyone in our group stays informed about the individual contributions?
 

@@ -43,8 +43,6 @@ build-and-test:
 
 # This section describes what shall be done to deploy artefacts from the project.
 release:
-  tags:
-    - docker-build
   stage: deploy
   script:
     - docker build -f ./source_code/Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .

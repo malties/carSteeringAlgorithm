@@ -48,21 +48,12 @@ build-and-test:
 release:
   tags:
     - docker-build
-    - /^v.*$/
   stage: deploy
-  script:
-    - docker build -f ./source_code/Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
-    - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
-    
-deploy:
-  tags:
-    - docker-build
-  stage: deploy
-  
   script:
     - cd source_code
-    - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
+    - docker build -f /Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
   only:
-    refs:
-    - tags == /^(([0-9]+)\.)?([0-9]+)\.x/
+     refs:
+       - tags == /^(([0-9]+)\.)?([0-9]+)\.x/
+    

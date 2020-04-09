@@ -54,7 +54,6 @@ release:
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
   only:
-     refs:
-       - tags 
-       - /^(([0-9]+)\.)?([0-9]+)\.x/
-    
+    refs:
+    - tags
+    - /^(([0-9]+)\.)?([0-9]+)\.x/

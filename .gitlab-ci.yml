@@ -45,23 +45,14 @@ build-and-test:
     - docker build -f ./source_code/Dockerfile ./source_code/
 
 # This section describes what shall be done to deploy artefacts from the project.
-semantic_release:
+release:
   tags:
     - docker-build
-  stage: release
-  image: node:13
-  variables:
-      GITLAB_TOKEN: $ACCESS_TOKEN
-  before_script:
-      - npm install @semantic-release/gitlab
-  only:
-    refs:
-    - master
-    # This matches maintenance branches
-    - /^(([0-9]+)\.)?([0-9]+)\.x/
-
+    - /^v.*$/
+  stage: deploy
   script:
-    - npx semantic-release
+    - docker build -f ./source_code/Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
+    - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
     
 deploy:
   tags:

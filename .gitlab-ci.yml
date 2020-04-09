@@ -43,7 +43,7 @@ build-and-test:
     - tags == /^(([0-9]+)\.)?([0-9]+)\.x/
   script:
     - cd source_code
-    - docker build -f Dockerfile .
+    - docker build -f ./source_code/Dockerfile ./source_code/
 
 # This section describes what shall be done to deploy artefacts from the project.
 semantic_release:
@@ -55,11 +55,11 @@ semantic_release:
       GITLAB_TOKEN: $ACCESS_TOKEN
   before_script:
       - npm install @semantic-release/gitlab
-  only:
-    refs:
-    - master
+ # only:
+    #refs:
+    #- master
     # This matches maintenance branches
-    - /^(([0-9]+)\.)?([0-9]+)\.x/
+   # - /^(([0-9]+)\.)?([0-9]+)\.x/
 
   script:
     - npx semantic-release

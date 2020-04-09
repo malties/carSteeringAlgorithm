@@ -1,5 +1,7 @@
 # group_06
 
+[![pipeline status](https://git.chalmers.se/courses/dit638/students/group_06/badges/master/pipeline.svg)](https://git.chalmers.se/courses/dit638/students/group_06/commits/master)
+
 ## How to clone and install
 In order to be able to clone the repository, an SSH key is necessary. The steps to clone and install are:
    1. Navigate to your .ssh folder in the root directory.

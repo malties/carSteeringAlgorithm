@@ -42,7 +42,7 @@ build-and-test:
   except:
     - tags
   script:
-    - cd source
+    - cd source_code
     - docker build -f Dockerfile .
 
 # This section describes what shall be done to deploy artefacts from the project.
@@ -70,7 +70,7 @@ deploy:
   stage: deploy
   
   script:
-    - cd source
+    - cd source_code
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
   only:

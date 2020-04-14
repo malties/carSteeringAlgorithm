@@ -40,7 +40,8 @@ build-and-test:
     - docker-build
   stage: build
   except:
-    - tags == /^(([0-9]+)\.)?([0-9]+)\.x/
+    - tags 
+    - /^(([0-9]+)\.)?([0-9]+)\.x/
   script:
     - docker build -f ./source_code/Dockerfile ./source_code/
 
@@ -51,7 +52,7 @@ release:
   stage: deploy
   script:
     - cd source_code
-#    - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
+    - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
   only:
     refs:

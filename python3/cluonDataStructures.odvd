@@ -1,0 +1,42 @@
+//
+// Copyright (C) 2017-2018  Christian Berger
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
+message cluon.data.TimeStamp [id = 12] {
+    int32 seconds      [id = 1];
+    int32 microseconds [id = 2];
+}
+
+message cluon.data.Envelope [id = 1] {
+    int32 dataType                          [id = 1];
+    bytes serializedData                    [id = 2];
+    cluon.data.TimeStamp sent               [id = 3];
+    cluon.data.TimeStamp received           [id = 4];
+    cluon.data.TimeStamp sampleTimeStamp    [id = 5];
+    uint32 senderStamp                      [id = 6];
+}
+
+message cluon.data.PlayerCommand [id = 9] {
+    uint8 command [id = 1]; // 0 = nothing, 1 = play, 2 = pause, 3 = seekTo, 4 = step
+    float seekTo [id = 2];
+}
+
+message cluon.data.PlayerStatus [id = 10] {
+    uint8 state [id = 1]; // 0 = unknown, 1 = loading file, 2 = playback
+    uint32 numberOfEntries [id = 2];
+    uint32 currentEntryForPlayback [id = 3];
+}
+

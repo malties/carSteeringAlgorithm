@@ -105,8 +105,7 @@ int32_t main(int32_t argc, char **argv) {
            //TODO: find range for yellow cones
                 inRange(hsv, Scalar(20,100,100),Scalar(30,255,255), output2);
  
- 
- 
+
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);

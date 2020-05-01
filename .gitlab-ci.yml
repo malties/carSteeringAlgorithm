@@ -44,7 +44,7 @@ build-and-test:
     - tags 
     - /^(([0-9]+)\.)?([0-9]+)\.x/
   script:
-    - docker build -f ./source_code/Dockerfile ./source_code/
+    - docker build -f ./src/Dockerfile ./src/
 
 # This section describes what shall be done to deploy artefacts from the project.
 release:

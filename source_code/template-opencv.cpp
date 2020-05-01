@@ -99,11 +99,11 @@ int32_t main(int32_t argc, char **argv) {
                 cv:: Mat output2;
                 cvtColor(img,hsv,COLOR_BGR2HSV);
                
-                inRange(hsv, Scalar(110,50,50),Scalar(130,255,255), outputImg);
+                inRange(hsv, Scalar(97,101,0),Scalar(130,255,255), outputImg);
                        
                
            //TODO: find range for yellow cones
-                inRange(hsv, Scalar(110,50,50),Scalar(130,255,255), outputImg);
+                inRange(hsv, Scalar(20,100,100),Scalar(30,255,255), output2);
  
  
  

@@ -24,7 +24,7 @@ RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get dist-upgrade -y
 
-RUN apt-get update --fix-missing
+RUN apt-get update
 
 # Install the development libraries for OpenCV
 RUN apt-get install -y --no-install-recommends \
@@ -51,6 +51,8 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get dist-upgrade -y
+    
+RUN apt-get update
 
 RUN apt-get install -y --no-install-recommends \
         libopencv-core3.2 \

@@ -95,16 +95,20 @@ int32_t main(int32_t argc, char **argv) {
                 using namespace std;
                 using namespace cv;
                 cv::Mat hsv;
+                cv::Mat result;
                 cv::Mat outputImg;
                 cv:: Mat output2;
                 cvtColor(img,hsv,COLOR_BGR2HSV);
                
+                
+
                 inRange(hsv, Scalar(97,101,0),Scalar(130,255,255), outputImg);
                        
                
            //TODO: find range for yellow cones
                 inRange(hsv, Scalar(20,100,100),Scalar(30,255,255), output2);
- 
+                result= outputImg+output2;
+              
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
@@ -115,7 +119,7 @@ int32_t main(int32_t argc, char **argv) {
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
-                    cv::imshow("show output", outputImg);
+                    cv::imshow("show output", result);
                     cv::waitKey(1);
                 }
             }

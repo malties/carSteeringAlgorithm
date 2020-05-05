@@ -95,6 +95,7 @@ int32_t main(int32_t argc, char **argv) {
                 using namespace std;
                 using namespace cv;
                 cv::Mat hsv;
+<<<<<<< HEAD
                 cv::Mat blueCones;
                 cv:: Mat yellowCones;
                 cv:: Mat result;
@@ -114,6 +115,22 @@ int32_t main(int32_t argc, char **argv) {
 
                 cv::morphologyEx(result,result2,cv::MORPH_OPEN,Kernel);
                 cv::morphologyEx(result2,result3,cv::MORPH_CLOSE,Kernel);
+=======
+                cv::Mat result;
+                cv::Mat outputImg;
+                cv:: Mat output2;
+                cvtColor(img,hsv,COLOR_BGR2HSV);
+               
+                
+
+                inRange(hsv, Scalar(97,101,0),Scalar(130,255,255), outputImg);
+                       
+               
+           //TODO: find range for yellow cones
+                inRange(hsv, Scalar(20,100,100),Scalar(30,255,255), output2);
+                result= outputImg+output2;
+              
+>>>>>>> 5901d3cfaa006c3bd94c5d3ecf8c74dc185271d3
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
@@ -124,10 +141,14 @@ int32_t main(int32_t argc, char **argv) {
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
+<<<<<<< HEAD
                    // cv::imshow("show output", blueCones);
                     //cv::imshow("show output 2", yellowCones);
                     cv::imshow("result", result);
                     cv::imshow("result 2", result3);
+=======
+                    cv::imshow("show output", result);
+>>>>>>> 5901d3cfaa006c3bd94c5d3ecf8c74dc185271d3
                     cv::waitKey(1);
                 }
             }

@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# First stage for building the software:
+#  First stage for building the software:
 FROM ubuntu:18.04 as builder
 MAINTAINER Christian Berger "christian.berger@gu.se"
 
@@ -23,6 +23,8 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get dist-upgrade -y
+
+RUN apt-get update
 
 # Install the development libraries for OpenCV
 RUN apt-get install -y --no-install-recommends \
@@ -49,6 +51,8 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get dist-upgrade -y
+    
+RUN apt-get update
 
 RUN apt-get install -y --no-install-recommends \
         libopencv-core3.2 \

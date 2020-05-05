@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# First stage for building the software:
+#  First stage for building the software:
 FROM ubuntu:18.04 as builder
 MAINTAINER Christian Berger "christian.berger@gu.se"
 

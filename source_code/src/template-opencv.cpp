@@ -95,42 +95,52 @@ int32_t main(int32_t argc, char **argv) {
                 using namespace std;
                 using namespace cv;
                 cv::Mat hsv;
-<<<<<<< HEAD
                 cv::Mat blueCones;
+                cv::Mat blueConesOpen;
+                cv::Mat blueConesClose;
                 cv:: Mat yellowCones;
+                cv:: Mat yellowConesOpen;
+                cv:: Mat yellowConesClose;
+                cv:: Mat topHalf;
                 cv:: Mat result;
                 cv:: Mat result2;
                 cv:: Mat result3;
                 cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
                 cvtColor(img,hsv,COLOR_BGR2HSV);
                
-                inRange(hsv, Scalar(97,101,0),Scalar(130,255,255), blueCones);
+                inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
                        
                
            //TODO: find range for yellow cones
                 inRange(hsv, Scalar(20,100,100),Scalar(30,255,255), yellowCones);
 
-                result = blueCones + yellowCones;
-                result2 = blueCones + yellowCones;
+                inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
 
-                cv::morphologyEx(result,result2,cv::MORPH_OPEN,Kernel);
-                cv::morphologyEx(result2,result3,cv::MORPH_CLOSE,Kernel);
-=======
-                cv::Mat result;
-                cv::Mat outputImg;
-                cv:: Mat output2;
-                cvtColor(img,hsv,COLOR_BGR2HSV);
-               
-                
+                //result = blueCones;
+                //result2 = blueCones + yellowCones;
 
-                inRange(hsv, Scalar(97,101,0),Scalar(130,255,255), outputImg);
+                cv::morphologyEx(blueCones, blueConesOpen,cv::MORPH_OPEN,Kernel);
+                cv::morphologyEx(blueConesOpen, blueConesClose,cv::MORPH_CLOSE,Kernel); 
+
+                cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
+                cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
+
+                cv::Rect myROI(0,200,640,250);
+                cv::Rect myROITop(0,100,640,230);
+
+                cv::Mat blueConesFinal(blueConesClose);
+                cv::Mat croppedImageBlue = blueConesFinal(myROI);
+
+                cv::Mat yellowConesFinal(yellowConesClose);
+                cv::Mat croppedImageYellow = yellowConesFinal(myROI);
+
+                cv::Mat topHalfFinal(topHalf);
+                cv::Mat croppedImageTop = topHalfFinal(myROITop);
+
+                result2 = croppedImageBlue + croppedImageYellow;
+                //result3 = result2 + topHalf;
+                cv::vconcat(croppedImageTop, result2, result3);
                        
-               
-           //TODO: find range for yellow cones
-                inRange(hsv, Scalar(20,100,100),Scalar(30,255,255), output2);
-                result= outputImg+output2;
-              
->>>>>>> 5901d3cfaa006c3bd94c5d3ecf8c74dc185271d3
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
@@ -141,14 +151,9 @@ int32_t main(int32_t argc, char **argv) {
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
-<<<<<<< HEAD
                    // cv::imshow("show output", blueCones);
                     //cv::imshow("show output 2", yellowCones);
-                    cv::imshow("result", result);
-                    cv::imshow("result 2", result3);
-=======
-                    cv::imshow("show output", result);
->>>>>>> 5901d3cfaa006c3bd94c5d3ecf8c74dc185271d3
+                    cv::imshow("result", result3);
                     cv::waitKey(1);
                 }
             }

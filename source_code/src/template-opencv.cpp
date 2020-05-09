@@ -112,7 +112,7 @@ int32_t main(int32_t argc, char **argv) {
                        
                
            //TODO: find range for yellow cones
-                inRange(hsv, Scalar(20,100,100),Scalar(30,255,255), yellowCones);
+                inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
 
                 inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
 
@@ -125,7 +125,7 @@ int32_t main(int32_t argc, char **argv) {
                 cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
                 cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
-                cv::Rect myROI(0,200,640,250);
+                cv::Rect myROI(0,200,640,280);
                 cv::Rect myROITop(0,100,640,230);
 
                 cv::Mat blueConesFinal(blueConesClose);
@@ -154,6 +154,7 @@ int32_t main(int32_t argc, char **argv) {
                    // cv::imshow("show output", blueCones);
                     //cv::imshow("show output 2", yellowCones);
                     cv::imshow("result", result3);
+                    cv::imshow("result", result2);
                     cv::waitKey(1);
                 }
             }

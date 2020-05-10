@@ -27,6 +27,7 @@ RUN apt-get update -y && \
 RUN apt-get update -y
 #New code for ARM
 RUN apt-get upgrade -y
+RUN apt-get install -y wget
 RUN apt-get install -y qemu-user-static
 #RUN docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 #RUN docker run --rm -t arm32v6/alpine uname -m
@@ -37,9 +38,9 @@ RUN wget https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1
 RUN mv buildx-v0.3.1.linux-amd64 docker-buildx 
 RUN chmod 755 docker-buildx
 
-RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name platformbuilder --use
-RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx inspect --bootstrap
-RUN cd ~
+#RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name platformbuilder --use
+#RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx inspect --bootstrap
+#RUN cd ~
 
 
 #End of new code.  Delete if it sucks 

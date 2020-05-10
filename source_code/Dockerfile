@@ -25,6 +25,25 @@ RUN apt-get update -y && \
     apt-get dist-upgrade -y
 
 RUN apt-get update
+#New code for ARM
+RUN apt-get upgrade
+RUN apt-get install qemu-user-static
+RUN --rm --privileged multiarch/qemu-user-static --reset -p yes
+RUN docker run --rm -t arm32v6/alpine uname -m
+
+RUN mkdir -p ~/.docker/cli-plugins
+    cd ~/.docker/cli-plugins/ && \
+    wget https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64 (Links to an external site.) && \
+    mv buildx-v0.3.1.linux-amd64 docker-buildx && \
+    chmod 755 docker-buildx
+
+RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name platformbuilder --use
+RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx inspect --bootstrap
+RUN cd ~
+
+RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform "linux/amd64,linux/arm64,linux/arm/v7" -t my-application -o type=local,dest=export .
+
+#End of new code.  Delete if it sucks 
 
 # Install the development libraries for OpenCV
 RUN apt-get install -y --no-install-recommends \

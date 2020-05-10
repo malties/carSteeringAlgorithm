@@ -24,10 +24,11 @@ RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get dist-upgrade -y
 
-RUN apt-get update
+RUN sudo apt-get update
 #New code for ARM
-RUN apt-get upgrade
-RUN apt-get install qemu-user-static
+RUN sudo apt-get upgrade
+RUN sudo apt-get install qemu-user-static
+RUN Y
 RUN docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 #RUN docker run --rm -t arm32v6/alpine uname -m
 

@@ -41,7 +41,6 @@ RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name platformbuilder 
 RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx inspect --bootstrap
 RUN cd ~
 
-RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform "linux/amd64,linux/arm64,linux/arm/v7" -t my-application -o type=local,dest=export .
 
 #End of new code.  Delete if it sucks 
 

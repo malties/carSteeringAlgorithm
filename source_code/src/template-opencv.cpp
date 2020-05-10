@@ -22,9 +22,12 @@
  
 // Include the GUI and image processing header files from OpenCV
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc.hpp>
  
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{1};
@@ -110,8 +113,6 @@ int32_t main(int32_t argc, char **argv) {
                
                 inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
                        
-               
-           //TODO: find range for yellow cones
                 inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
 
                 inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
@@ -126,20 +127,65 @@ int32_t main(int32_t argc, char **argv) {
                 cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
                 cv::Rect myROI(0,200,640,280);
-                cv::Rect myROITop(0,100,640,230);
+               // cv::Rect myROITop(0,100,640,230);
+               //this is the short way
+               Mat r= blueConesClose+ yellowConesClose;
+               Mat croppedImg= r(myROI);
+                //short way ends here
+                
+                Mat cannyOutput;
+                vector<vector<Point> > contours;
+                vector<Vec4i> hierarchy;
+                RNG rng(12345);
+            
+                Canny(croppedImg, cannyOutput,127, 255, 3);
+                findContours(cannyOutput, contours,RETR_TREE,CHAIN_APPROX_SIMPLE);
+                
+                vector<Rect> boundRect( contours.size() );
+                
+                vector<vector<Point> > contour_poly(contours.size() );
+                vector<Moments> mu (contours.size());
 
+                for(size_t i=0; i<contours.size();i++){
+                    mu[i]= moments(contours[i], false);
+                    approxPolyDP(contours[i], contour_poly[i], 3, true);
+                    boundRect[i]= boundingRect(contour_poly[i]);
+                }          
+
+                Mat drawing= Mat::zeros(cannyOutput.size(), CV_8UC3);
+                vector<Point2f> mc (contours.size());
+                for(int unsigned i=0; i< contours.size();i++){
+                    mc[i]= Point2f(mu[i].m10/mu[i].m00, mu[i].m01/mu[i].m00);
+                }
+                
+                for(int unsigned i =0; i<contours.size(); i++){
+                    Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
+                   // drawContours(drawing, contour_poly, (int)i, color);
+                    rectangle(drawing,boundRect[i].tl(), boundRect[i].br(), color,2);
+                    circle(drawing,mc[i],4,color,-1,8,0);                
+                    //polylines(drawing, mc[i],1, Scalar(0,255,0),2,8,0);
+                }
+                //std::cout << "the contours" << contours.size() <<endl;
+                //std::count<<contours[1] <<endl;
+
+
+
+                //long way 
                 cv::Mat blueConesFinal(blueConesClose);
                 cv::Mat croppedImageBlue = blueConesFinal(myROI);
 
-                cv::Mat yellowConesFinal(yellowConesClose);
+               cv::Mat yellowConesFinal(yellowConesClose);
                 cv::Mat croppedImageYellow = yellowConesFinal(myROI);
 
-                cv::Mat topHalfFinal(topHalf);
-                cv::Mat croppedImageTop = topHalfFinal(myROITop);
+                //cv::Mat topHalfFinal(topHalf);
+                //cv::Mat croppedImageTop = topHalfFinal(myROITop);
 
                 result2 = croppedImageBlue + croppedImageYellow;
                 //result3 = result2 + topHalf;
-                cv::vconcat(croppedImageTop, result2, result3);
+                //cv::vconcat(croppedImageTop, result2, result3);
+                //long way ends here 
+
+                
                        
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
@@ -153,8 +199,10 @@ int32_t main(int32_t argc, char **argv) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                    // cv::imshow("show output", blueCones);
                     //cv::imshow("show output 2", yellowCones);
-                    cv::imshow("result", result3);
-                    cv::imshow("result", result2);
+                    cv::imshow("resultn", result2);
+                    cv::imshow("result", cannyOutput);
+                    cv::imshow("the drawing", drawing);
+                    
                     cv::waitKey(1);
                 }
             }

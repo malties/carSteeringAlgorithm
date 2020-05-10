@@ -33,7 +33,7 @@ RUN --rm --privileged multiarch/qemu-user-static --reset -p yes
 
 RUN mkdir -p ~/.docker/cli-plugins
 RUN cd ~/.docker/cli-plugins
-RUN wget https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64 (Links to an external site.)
+RUN wget https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
 RUN mv buildx-v0.3.1.linux-amd64 docker-buildx 
 RUN chmod 755 docker-buildx
 

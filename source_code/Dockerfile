@@ -41,7 +41,7 @@ RUN chmod 755 docker-buildx
 
 #RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name platformbuilder --use
 #RUN DOCKER_CLI_EXPERIMENTAL=enabled docker buildx inspect --bootstrap
-#RUN cd ~
+RUN cd ~
 
 
 #End of new code.  Delete if it sucks 

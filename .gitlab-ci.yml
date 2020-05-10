@@ -20,6 +20,8 @@ image: docker:19.03.3
 variables:
   DOCKER_HOST: tcp://172.17.0.1:2375
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_CLI_EXPERIMENTAL: "enabled"
+
 
 services:
   - name: docker:19.03.3-dind

@@ -35,8 +35,6 @@ stages:
 before_script:
   - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes  
-
 
 # This section describes what shall be done to build and test the project.
 build-and-test:
@@ -50,6 +48,7 @@ build-and-test:
   script:
     - cd source_code
     - docker build -f Dockerfile .
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes  
     - docker buildx build --platform "linux/amd64,linux/arm64,linux/arm/v7" -t my-application -o type=local,dest=export .
 
 # This section describes what shall be done to deploy artefacts from the project.

@@ -28,7 +28,7 @@
  
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{1};
-    // Parse the command line parameters as we require the user to specify some mandatory information on startup.
+    // Parse the command line parameters as we require the user to specify some mandatory information on      startup.
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
     if ( (0 == commandlineArguments.count("cid")) ||
          (0 == commandlineArguments.count("name")) ||

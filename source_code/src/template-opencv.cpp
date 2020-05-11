@@ -104,45 +104,41 @@ int32_t main(int32_t argc, char **argv) {
                 cv:: Mat yellowCones;
                 cv:: Mat yellowConesOpen;
                 cv:: Mat yellowConesClose;
-                cv:: Mat topHalf;
-                cv:: Mat result;
-                cv:: Mat result2;
-                cv:: Mat result3;
                 cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
-                cvtColor(img,hsv,COLOR_BGR2HSV);
+                
+                cvtColor(img,hsv,COLOR_BGR2HSV); 
+
+                cv::rectangle(img, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
                
+
                 inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
                        
                 inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
 
-                inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
+                //inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
 
-                //result = blueCones;
-                //result2 = blueCones + yellowCones;
-
+                //Close and open yello and blue cones to cancel out noise
                 cv::morphologyEx(blueCones, blueConesOpen,cv::MORPH_OPEN,Kernel);
                 cv::morphologyEx(blueConesOpen, blueConesClose,cv::MORPH_CLOSE,Kernel); 
 
                 cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
                 cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
-                cv::Rect myROI(0,200,640,290);
+                cv::Rect myROI(0,200,640,280); // sets boundries for area we are interested in 
                // cv::Rect myROITop(0,100,640,230);
-               //this is the short way
+            
                
-               //Mat r= blueConesClose+ yellowConesClose;
+               Mat r= blueConesClose+ yellowConesClose;
+               cv::rectangle(r, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
+               
+               Mat croppedImg= r(myROI);
+
+
+
+
+                //the code here for the purpose of creating 
                Mat b=blueConesClose(myROI);
                Mat y=yellowConesClose(myROI);
-
-               
-
-
-
-
-
-
-               //the code to create circles and sqaures 
-                //short way ends here
                 
                 Mat cannyOutputB;
                 Mat cannyOutputY;
@@ -158,7 +154,7 @@ int32_t main(int32_t argc, char **argv) {
                 findContours(cannyOutputB, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); //outputs array of arrays, contours are basically the boundaries of a shape in (x,y), CHAIN_APPROX_SIMPLE removes redundant coordinates
                 findContours(cannyOutputY, contoursY,RETR_TREE,CHAIN_APPROX_SIMPLE);
 
-                vector<Rect> boundRect( contoursB.size() );
+                vector<Rect> boundRect( contoursB.size() ); //only needed for rectangle
                 
               //  vector<vector<Point> > contour_poly(contours.size() ); //array of array
                 vector<Moments> muB (contoursB.size());
@@ -189,7 +185,7 @@ int32_t main(int32_t argc, char **argv) {
                     mcY[i]= Point2f(muY[i].m10/muY[i].m00, muY[i].m01/muY[i].m00);
                 }
 
-                vector<vector<Point> > l;
+                //vector<vector<Point> > l;
                 //l= [0,0];
                 Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
                 for(int unsigned i =0; i<contoursB.size(); i++){
@@ -211,24 +207,6 @@ int32_t main(int32_t argc, char **argv) {
                 Mat lol= drawingY+drawingB;
                 //std::cout << "the contours" << contours.size() <<endl;
                 //std::count<<contours[1] <<endl;
-
-
-
-                //long way 
-                cv::Mat blueConesFinal(blueConesClose);
-                cv::Mat croppedImageBlue = blueConesFinal(myROI);
-
-               cv::Mat yellowConesFinal(yellowConesClose);
-                cv::Mat croppedImageYellow = yellowConesFinal(myROI);
-
-                //cv::Mat topHalfFinal(topHalf);
-                //cv::Mat croppedImageTop = topHalfFinal(myROITop);
-
-                //result2 = croppedImageBlue + croppedImageYellow;
-                //result3 = result2 + topHalf;
-                //cv::vconcat(croppedImageTop, result2, result3);
-                //long way ends here 
-
                
                 //cv::rectangle(lol, cv::Point(0, 200), cv::Point(3, 220), cv::Scalar(0,0,255));
  
@@ -242,9 +220,10 @@ int32_t main(int32_t argc, char **argv) {
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
-                   // cv::imshow("show output", blueCones);
-                    //cv::imshow("show output 2", yellowCones);
-                    cv::imshow("resultn", result2);
+                    cv::imshow("the OG", img);
+                    cv::imshow("the area of interest", croppedImg);
+                    cv::imshow("blue and yellow cones with rectangle", r);
+                    
                     
                   //  cv::imshow("the drawing", lol);
                     

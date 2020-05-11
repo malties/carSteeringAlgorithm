@@ -93,7 +93,7 @@ int32_t main(int32_t argc, char **argv) {
  
                 // TODO: Do something with the frame.
                 // Example: Draw a red rectangle and display image.
-                cv::rectangle(img, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
+                cv::rectangle(croppedImg, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
  
                 using namespace std;
                 using namespace cv;
@@ -126,45 +126,89 @@ int32_t main(int32_t argc, char **argv) {
                 cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
                 cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
-                cv::Rect myROI(0,200,640,280);
+                cv::Rect myROI(0,200,640,290);
                // cv::Rect myROITop(0,100,640,230);
                //this is the short way
-               Mat r= blueConesClose+ yellowConesClose;
-               Mat croppedImg= r(myROI);
+               
+               //Mat r= blueConesClose+ yellowConesClose;
+               Mat b=blueConesClose(myROI);
+               Mat y=yellowConesClose(myROI);
+
+               
+
+
+
+
+
+
+               //the code to create circles and sqaures 
                 //short way ends here
                 
-                Mat cannyOutput;
-                vector<vector<Point> > contours;
+                Mat cannyOutputB;
+                Mat cannyOutputY;
+
+                vector<vector<Point> > contoursB;
+                vector<vector<Point> > contoursY;
                 vector<Vec4i> hierarchy;
                 RNG rng(12345);
             
-                Canny(croppedImg, cannyOutput,127, 255, 3);
-                findContours(cannyOutput, contours,RETR_TREE,CHAIN_APPROX_SIMPLE);
-                
-                vector<Rect> boundRect( contours.size() );
-                
-                vector<vector<Point> > contour_poly(contours.size() );
-                vector<Moments> mu (contours.size());
+                Canny(y, cannyOutputY,127, 255, 3); //create gray image of the original image
+                Canny(b, cannyOutputB,127,255,3);
 
-                for(size_t i=0; i<contours.size();i++){
-                    mu[i]= moments(contours[i], false);
-                    approxPolyDP(contours[i], contour_poly[i], 3, true);
-                    boundRect[i]= boundingRect(contour_poly[i]);
+                findContours(cannyOutputB, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); //outputs array of arrays, contours are basically the boundaries of a shape in (x,y), CHAIN_APPROX_SIMPLE removes redundant coordinates
+                findContours(cannyOutputY, contoursY,RETR_TREE,CHAIN_APPROX_SIMPLE);
+
+                vector<Rect> boundRect( contoursB.size() );
+                
+              //  vector<vector<Point> > contour_poly(contours.size() ); //array of array
+                vector<Moments> muB (contoursB.size());
+                vector<Moments> muY (contoursY.size());
+
+
+                for(size_t i=0; i<contoursB.size();i++){
+                    muB[i]= moments(contoursB[i], false);
+                   // approxPolyDP(contours[i], contour_poly[i], 3, true); //this method approximates a polygonal curve with specified precision
+                    //boundRect[i]= boundingRect(contour_poly[i]); //boundingRect calculates the up-right bounding rectangle of a point set. 
+                    // input of boundingRect is a curve of 2D pints 
+                    //The functions approxPolyDP approximate a curve or a polygon with another curve/polygon 
+                    //with less vertices so that the distance between them is less or equal to the specified precision. 
+                }
+                for(size_t i=0; i<contoursY.size();i++){
+                    muY[i]= moments(contoursY[i],false);
                 }          
 
-                Mat drawing= Mat::zeros(cannyOutput.size(), CV_8UC3);
-                vector<Point2f> mc (contours.size());
-                for(int unsigned i=0; i< contours.size();i++){
-                    mc[i]= Point2f(mu[i].m10/mu[i].m00, mu[i].m01/mu[i].m00);
-                }
+                Mat drawingB= Mat::zeros(cannyOutputB.size(), CV_8UC3);
+                Mat drawingY= Mat::zeros(cannyOutputY.size(), CV_8UC3);
                 
-                for(int unsigned i =0; i<contours.size(); i++){
-                    Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
-                   // drawContours(drawing, contour_poly, (int)i, color);
-                    rectangle(drawing,boundRect[i].tl(), boundRect[i].br(), color,2);
-                    circle(drawing,mc[i],4,color,-1,8,0);                
-                    //polylines(drawing, mc[i],1, Scalar(0,255,0),2,8,0);
+                vector<Point2f> mcB (contoursB.size());
+                for(int unsigned i=0; i< contoursB.size();i++){
+                    mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
                 }
+                vector<Point2f> mcY (contoursY.size());
+                for(int unsigned i=0; i< contoursY.size();i++){
+                    mcY[i]= Point2f(muY[i].m10/muY[i].m00, muY[i].m01/muY[i].m00);
+                }
+
+                vector<vector<Point> > l;
+                //l= [0,0];
+                Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
+                for(int unsigned i =0; i<contoursB.size(); i++){
+                   // Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
+                   // drawContours(drawing, contour_poly, (int)i, color);
+                    //rectangle(drawing,boundRect[i].tl(), boundRect[i].br(), color,2); // tl() is topleft corner, br() bottom right coner 
+                    circle(drawingB,mcB[i],4,color,-1,8,0);    
+                                
+                    //polylines(drawing, mc[i],1, Scalar(0,255,0),2,8,0);
+                    //if(mcB[i]>Moments(l,false)){
+                        line(drawingB, mcB[i], mcB[i+1], color,5 );
+                    //}
+                    
+                }
+                for(int unsigned i=0; i<contoursY.size(); i++){
+                    circle(drawingY,mcY[i],4,color,-1,8,0); 
+                    //line(drawingY, mcY[i], mcY[i+1], color,5 );
+                }
+                Mat lol= drawingY+drawingB;
                 //std::cout << "the contours" << contours.size() <<endl;
                 //std::count<<contours[1] <<endl;
 
@@ -180,13 +224,14 @@ int32_t main(int32_t argc, char **argv) {
                 //cv::Mat topHalfFinal(topHalf);
                 //cv::Mat croppedImageTop = topHalfFinal(myROITop);
 
-                result2 = croppedImageBlue + croppedImageYellow;
+                //result2 = croppedImageBlue + croppedImageYellow;
                 //result3 = result2 + topHalf;
                 //cv::vconcat(croppedImageTop, result2, result3);
                 //long way ends here 
 
-                
-                       
+               
+                //cv::rectangle(lol, cv::Point(0, 200), cv::Point(3, 220), cv::Scalar(0,0,255));
+ 
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
@@ -200,8 +245,8 @@ int32_t main(int32_t argc, char **argv) {
                    // cv::imshow("show output", blueCones);
                     //cv::imshow("show output 2", yellowCones);
                     cv::imshow("resultn", result2);
-                    cv::imshow("result", cannyOutput);
-                    cv::imshow("the drawing", drawing);
+                    
+                  //  cv::imshow("the drawing", lol);
                     
                     cv::waitKey(1);
                 }

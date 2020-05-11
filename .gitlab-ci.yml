@@ -21,6 +21,8 @@ variables:
   DOCKER_HOST: tcp://172.17.0.1:2375
   DOCKER_TLS_CERTDIR: ""
   DOCKER_CLI_EXPERIMENTAL: "enabled"
+  BUILDX_URL: https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
+
 
 
 services:
@@ -37,6 +39,10 @@ stages:
 before_script:
   - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - mkdir -p $HOME/.docker/cli-plugins/
+  - wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
+  - chmod a+x $HOME/.docker/cli-plugins/docker-buildx
+
 
 # This section describes what shall be done to build and test the project.
 build-and-test:

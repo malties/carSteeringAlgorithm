@@ -211,11 +211,11 @@ int32_t main(int32_t argc, char **argv) {
                 for(int unsigned i =0; i<mcS.size();i++){
                     float x2= mcB[i].x;
                     float y2= mcB[i].y;
-                    float x= mcY[i].x;
-                    float y= mcY[i].y;
+                    float x1= mcY[i].x;
+                    float y1= mcY[i].y;
                     cout<<"mcy"<<mcY[i]<<endl;
-                    float dif= x2-x;
-                    float dif2= y2-y;
+                    float dif= x2-x1;
+                    float dif2= y2-y1;
                     float power= pow(dif,2);
                     float power2= pow(dif2,2);
                     float ready= power+power2;

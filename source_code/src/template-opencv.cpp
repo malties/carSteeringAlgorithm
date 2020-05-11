@@ -138,18 +138,21 @@ int32_t main(int32_t argc, char **argv) {
                 vector<Vec4i> hierarchy;
                 RNG rng(12345);
             
-                Canny(croppedImg, cannyOutput,127, 255, 3);
-                findContours(cannyOutput, contours,RETR_TREE,CHAIN_APPROX_SIMPLE);
+                Canny(croppedImg, cannyOutput,127, 255, 3); //create gray image of the original image
+                findContours(cannyOutput, contours,RETR_TREE,CHAIN_APPROX_SIMPLE); //outputs array of arrays, contours are basically the boundaries of a shape in (x,y), CHAIN_APPROX_SIMPLE removes redundant coordinates
                 
                 vector<Rect> boundRect( contours.size() );
                 
-                vector<vector<Point> > contour_poly(contours.size() );
+                vector<vector<Point> > contour_poly(contours.size() ); //array of array
                 vector<Moments> mu (contours.size());
 
                 for(size_t i=0; i<contours.size();i++){
                     mu[i]= moments(contours[i], false);
-                    approxPolyDP(contours[i], contour_poly[i], 3, true);
-                    boundRect[i]= boundingRect(contour_poly[i]);
+                    approxPolyDP(contours[i], contour_poly[i], 3, true); //this method approximates a polygonal curve with specified precision
+                    boundRect[i]= boundingRect(contour_poly[i]); //boundingRect calculates the up-right bounding rectangle of a point set. 
+                    // input of boundingRect is a curve of 2D pints 
+                    //The functions approxPolyDP approximate a curve or a polygon with another curve/polygon 
+                    //with less vertices so that the distance between them is less or equal to the specified precision. 
                 }          
 
                 Mat drawing= Mat::zeros(cannyOutput.size(), CV_8UC3);
@@ -161,9 +164,10 @@ int32_t main(int32_t argc, char **argv) {
                 for(int unsigned i =0; i<contours.size(); i++){
                     Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
                    // drawContours(drawing, contour_poly, (int)i, color);
-                    rectangle(drawing,boundRect[i].tl(), boundRect[i].br(), color,2);
+                    rectangle(drawing,boundRect[i].tl(), boundRect[i].br(), color,2); // tl() is topleft corner, br() bottom right coner 
                     circle(drawing,mc[i],4,color,-1,8,0);                
                     //polylines(drawing, mc[i],1, Scalar(0,255,0),2,8,0);
+                    line(drawing, contours[i], contours[i+1], color,5 )
                 }
                 //std::cout << "the contours" << contours.size() <<endl;
                 //std::count<<contours[1] <<endl;

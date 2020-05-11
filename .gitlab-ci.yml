@@ -33,9 +33,7 @@ stages:
 before_script:
   - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  - docker buildx create --driver docker-container --use
-  - docker buildx inspect --bootstrap
-
+  
 # This section describes what shall be done to build and test the project.
 build-and-test:
   tags:
@@ -52,8 +50,6 @@ build-and-test:
     #- DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name platformbuilder --use
     #- DOCKER_CLI_EXPERIMENTAL=enabled docker buildx inspect --bootstrap
     #- DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform "linux/amd64,linux/arm64,linux/arm/v7" -t my-application -o type=local,dest=export .
-    - update-binfmts --enable # Important: Ensures execution of other binary formats is enabled in the kernel 
-    - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --pull -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" --push .
     - docker build -f ./source_code/Dockerfile ./source_code/
 
 # This section describes what shall be done to deploy artefacts from the project.
@@ -61,10 +57,16 @@ release:
   tags:
     - docker-build
   stage: deploy
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker buildx create --driver docker-container --use
+    - docker buildx inspect --bootstrap
   script:
     - cd source_code
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
-    - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
+    #- docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
+    - update-binfmts --enable # Important: Ensures execution of other binary formats is enabled in the kernel 
+    - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --pull -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" --push .
   only:
     refs:
     - tags

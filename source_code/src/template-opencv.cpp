@@ -93,8 +93,7 @@ int32_t main(int32_t argc, char **argv) {
  
                 // TODO: Do something with the frame.
                 // Example: Draw a red rectangle and display image.
-                cv::rectangle(croppedImg, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
- 
+              
                 using namespace std;
                 using namespace cv;
                 cv::Mat hsv;
@@ -104,12 +103,11 @@ int32_t main(int32_t argc, char **argv) {
                 cv:: Mat yellowCones;
                 cv:: Mat yellowConesOpen;
                 cv:: Mat yellowConesClose;
+                
                 cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
                 
+                
                 cvtColor(img,hsv,COLOR_BGR2HSV); 
-
-                cv::rectangle(img, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
-               
 
                 inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
                        
@@ -129,13 +127,10 @@ int32_t main(int32_t argc, char **argv) {
             
                
                Mat r= blueConesClose+ yellowConesClose;
-               cv::rectangle(r, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
-               
-               Mat croppedImg= r(myROI);
-
-
-
-
+               cv::rectangle(r, cv::Point(50, 50), cv::Point(200, 200), cv::Scalar(255,0,0));
+            Mat croppedImg= r(myROI);   
+                
+            
                 //the code here for the purpose of creating 
                Mat b=blueConesClose(myROI);
                Mat y=yellowConesClose(myROI);
@@ -195,22 +190,22 @@ int32_t main(int32_t argc, char **argv) {
                     circle(drawingB,mcB[i],4,color,-1,8,0);    
                                 
                     //polylines(drawing, mc[i],1, Scalar(0,255,0),2,8,0);
-                    //if(mcB[i]>Moments(l,false)){
-                        line(drawingB, mcB[i], mcB[i+1], color,5 );
-                    //}
+                    if(i>0){
+
+                        line(drawingB, mcB[i-1], mcB[i], color,5 );
+                    }
                     
                 }
                 for(int unsigned i=0; i<contoursY.size(); i++){
                     circle(drawingY,mcY[i],4,color,-1,8,0); 
                     //line(drawingY, mcY[i], mcY[i+1], color,5 );
+                     if(i>0){
+
+                        line(drawingY, mcY[i-1], mcY[i], color,5 );
+                    }
                 }
                 Mat lol= drawingY+drawingB;
-                //std::cout << "the contours" << contours.size() <<endl;
-                //std::count<<contours[1] <<endl;
-               
-                //cv::rectangle(lol, cv::Point(0, 200), cv::Point(3, 220), cv::Scalar(0,0,255));
- 
-
+                
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
@@ -220,12 +215,13 @@ int32_t main(int32_t argc, char **argv) {
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
-                    cv::imshow("the OG", img);
+                   
                     cv::imshow("the area of interest", croppedImg);
                     cv::imshow("blue and yellow cones with rectangle", r);
+                    cv::imshow("with lines and circles", lol);
                     
                     
-                  //  cv::imshow("the drawing", lol);
+                 
                     
                     cv::waitKey(1);
                 }

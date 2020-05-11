@@ -41,8 +41,7 @@ before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   - mkdir -p $HOME/.docker/cli-plugins/
   - wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
-  - chmod a+x $HOME/.docker/cli-plugins/docker-buildx
-    - docker buildx create --driver docker-container --name ${BUILDX_BUILDER} --platform=${BUILDX_PLATFORM}
+    - docker buildx create --use --driver docker-container --name ${BUILDX_BUILDER} --platform=${BUILDX_PLATFORM}
     - docker buildx inspect --bootstrap ${BUILDX_BUILDER}
     - docker buildx ls
 

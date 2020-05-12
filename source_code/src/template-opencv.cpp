@@ -128,10 +128,10 @@ int32_t main(int32_t argc, char **argv) {
                
                Mat r= blueConesClose+ yellowConesClose;
                cv::rectangle(r, cv::Point(50, 50), cv::Point(200, 200), cv::Scalar(255,0,0));
-            Mat croppedImg= r(myROI);   
+                Mat croppedImg= r(myROI);   
                 
             
-                //the code here for the purpose of creating 
+                //the code here for the purpose of creating lines and circles 
                Mat b=blueConesClose(myROI);
                Mat y=yellowConesClose(myROI);
                 
@@ -151,15 +151,17 @@ int32_t main(int32_t argc, char **argv) {
 
                 vector<Rect> boundRect( contoursB.size() ); //only needed for rectangle
                 
-              //  vector<vector<Point> > contour_poly(contours.size() ); //array of array
+               vector<vector<Point> > contour_poly(contours.size() ); //array of array
+                
                 vector<Moments> muB (contoursB.size());
                 vector<Moments> muY (contoursY.size());
 
 
                 for(size_t i=0; i<contoursB.size();i++){
                     muB[i]= moments(contoursB[i], false);
-                   // approxPolyDP(contours[i], contour_poly[i], 3, true); //this method approximates a polygonal curve with specified precision
-                    //boundRect[i]= boundingRect(contour_poly[i]); //boundingRect calculates the up-right bounding rectangle of a point set. 
+                    approxPolyDP(contours[i], contour_poly[i], 3, true); //this method approximates a polygonal curve with specified precision
+                    boundRect[i]= boundingRect(contour_poly[i]); 
+                    //boundingRect calculates the up-right bounding rectangle of a point set. 
                     // input of boundingRect is a curve of 2D pints 
                     //The functions approxPolyDP approximate a curve or a polygon with another curve/polygon 
                     //with less vertices so that the distance between them is less or equal to the specified precision. 
@@ -173,7 +175,7 @@ int32_t main(int32_t argc, char **argv) {
                 
                 vector<Point2f> mcB (contoursB.size());
                 for(int unsigned i=0; i< contoursB.size();i++){
-                    mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
+                    mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00); 
                 }
                 vector<Point2f> mcY (contoursY.size());
                 for(int unsigned i=0; i< contoursY.size();i++){
@@ -191,8 +193,9 @@ int32_t main(int32_t argc, char **argv) {
                                 
                     //polylines(drawing, mc[i],1, Scalar(0,255,0),2,8,0);
                     if(i>0){
-
                         line(drawingB, mcB[i-1], mcB[i], color,5 );
+                    }else{
+                        line(drawingB, mcB[i], mcB[i+1], color,5 );
                     }
                     
                 }
@@ -200,13 +203,12 @@ int32_t main(int32_t argc, char **argv) {
                     circle(drawingY,mcY[i],4,color,-1,8,0); 
                     //line(drawingY, mcY[i], mcY[i+1], color,5 );
                      if(i>0){
-
                         line(drawingY, mcY[i-1], mcY[i], color,5 );
                     }
                 }
                 Mat lol= drawingY+drawingB;
+                
                 float foo[mcB.size()+mcY.size()];
-
                 vector<Point2f> mcS (mcB.size()+mcY.size());
                 for(int unsigned i =0; i<mcS.size();i++){
                     float x2= mcB[i].x;

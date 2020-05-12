@@ -22,9 +22,16 @@ variables:
   DOCKER_TLS_CERTDIR: ""
   DOCKER_CLI_EXPERIMENTAL: "enabled"
   BUILDX_URL: https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
+  BUILDX_BUILDER: BUILDERBOIIIII
+  BUILDX_PLATFORM: linux/amd64,linux/arm64
+
+
+
 
 services:
-  - name: docker:19.03.3-dind
+  - name: docker:dind
+    command: ["--experimental"]
+
 
 stages:
   - build
@@ -35,7 +42,15 @@ stages:
 before_script:
   - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  
+  - mkdir -p $HOME/.docker/cli-plugins/
+  - wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
+  - chmod a+x $HOME/.docker/cli-plugins/docker-buildx
+  - docker buildx create --use --driver docker-container --name ${BUILDX_BUILDER} --platform=${BUILDX_PLATFORM}
+  - docker buildx inspect --bootstrap ${BUILDX_BUILDER}
+  - docker buildx ls
+
+
+
 # This section describes what shall be done to build and test the project.
 build-and-test:
   tags:
@@ -46,13 +61,9 @@ build-and-test:
     - tags 
     - /^(([0-9]+)\.)?([0-9]+)\.x/
   script:
-    #- cd source_code
-    #- docker build -f Dockerfile .
-   # - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-    #- DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name platformbuilder --use
-    #- DOCKER_CLI_EXPERIMENTAL=enabled docker buildx inspect --bootstrap
-    #- DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform "linux/amd64,linux/arm64,linux/arm/v7" -t my-application -o type=local,dest=export .
-    - docker build -f ./source_code/Dockerfile ./source_code/
+    - cd source_code
+    - docker build -f Dockerfile .
+
 
 # This section describes what shall be done to deploy artefacts from the project.
 release:
@@ -62,6 +73,8 @@ release:
   script:
     - cd source_code
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes  
+    - docker buildx build --platform "linux/amd64,linux/arm64,linux/arm/v7" -t my-application -o type=local,dest=export .
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
   only:
     refs:

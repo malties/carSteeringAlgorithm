@@ -27,7 +27,20 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgproc.hpp>
+
+const int alpha_slider_max = 640;
+int slider_x_left = 92;
+int slider_y = 276;
+int slider_x_right = 508;
+
+
+double alpha;
+double beta;
+
+static void on_trackbar( int, void* );
+
+cv::Mat img;
+cv::Mat slider_dst;
  
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{1};
@@ -76,7 +89,7 @@ int32_t main(int32_t argc, char **argv) {
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
                 // OpenCV data structure to hold an image.
-                cv::Mat img;
+                //cv::Mat img;
  
                 // Wait for a notification of a new frame.
                 sharedMemory->wait();
@@ -93,7 +106,7 @@ int32_t main(int32_t argc, char **argv) {
  
                 // TODO: Do something with the frame.
                 // Example: Draw a red rectangle and display image.
-                cv::rectangle(img, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
+                //cv::rectangle(img, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
  
                 using namespace std;
                 using namespace cv;
@@ -105,15 +118,17 @@ int32_t main(int32_t argc, char **argv) {
                 cv:: Mat yellowConesOpen;
                 cv:: Mat yellowConesClose;
                 cv:: Mat topHalf;
-                cv:: Mat result;
-                cv:: Mat result2;
-                cv:: Mat result3;
+              
                 cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
                 cvtColor(img,hsv,COLOR_BGR2HSV);
                
                 inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
+               // inRange(hsv, Scalar(105,141,31),Scalar(130,235,255), blueCones);
                        
+               
+           //TODO: find range for yellow cones
                 inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
+                //inRange(hsv, Scalar(18,141,14),Scalar(34,235,255), yellowCones);
 
                 inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
 
@@ -126,83 +141,236 @@ int32_t main(int32_t argc, char **argv) {
                 cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
                 cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
-                cv::Rect myROI(0,200,640,280);
-               // cv::Rect myROITop(0,100,640,230);
+                Mat r= blueConesClose + yellowConesClose;
+
+               
+
                //this is the short way
-               Mat r= blueConesClose+ yellowConesClose;
-               Mat croppedImg= r(myROI);
-                //short way ends here
-                
-                Mat cannyOutput;
-                vector<vector<Point> > contours;
+               cv::Rect myROI(0,200,640,280);
+               //cv::Rect myROI(0,250,640,100);
+               cv::Rect myROITop(0,100,640,200);
+               //cv::rectangle(r, cv::Point(50, 50), cv::Point(200, 200), cv::Scalar(255,0,0)); 
+               Mat croppedImg= r(myROI);   
+               
+
+               cv::Mat topHalfFinal(topHalf);
+               cv::Mat croppedImageTop = topHalfFinal(myROITop);
+
+
+            
+                //the code here for the purpose of creating 
+               Mat b=blueConesClose(myROI);
+               Mat bWhole;
+               cv::vconcat(croppedImageTop, b, bWhole);
+
+               Mat y=yellowConesClose(myROI);
+               Mat yWhole;
+               cv::vconcat(croppedImageTop, y, yWhole);
+
+                Mat cannyOutputB;
+                Mat cannyOutputY;
+                /*
+                vector<vector<Point> > contoursB;
+                vector<vector<Point> > contoursY;
                 vector<Vec4i> hierarchy;
                 RNG rng(12345);
             
-                Canny(croppedImg, cannyOutput,127, 255, 3);
-                findContours(cannyOutput, contours,RETR_TREE,CHAIN_APPROX_SIMPLE);
-                
-                vector<Rect> boundRect( contours.size() );
-                
-                vector<vector<Point> > contour_poly(contours.size() );
-                vector<Moments> mu (contours.size());
+                Canny(yWhole, cannyOutputY,127, 255, 3); //create gray image of the original image
+                Canny(bWhole, cannyOutputB,127,255,3);
 
-                for(size_t i=0; i<contours.size();i++){
-                    mu[i]= moments(contours[i], false);
-                    approxPolyDP(contours[i], contour_poly[i], 3, true);
-                    boundRect[i]= boundingRect(contour_poly[i]);
+                Mat cannyBoth = cannyOutputB + cannyOutputY;
+
+                findContours(cannyOutputB, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); //outputs array of arrays, contours are basically the boundaries of a shape in (x,y), CHAIN_APPROX_SIMPLE removes redundant coordinates
+                findContours(cannyOutputY, contoursY,RETR_TREE,CHAIN_APPROX_SIMPLE);
+
+                vector<Rect> boundRect( contoursB.size() ); //only needed for rectangle
+                
+              //  vector<vector<Point> > contour_poly(contours.size() ); //array of array
+                vector<Moments> muB (contoursB.size());
+                vector<Moments> muY (contoursY.size());
+
+
+                for(size_t i=0; i<contoursB.size();i++){
+                    muB[i]= moments(contoursB[i], false);
+                    
+                }
+                for(size_t i=0; i<contoursY.size();i++){
+                    muY[i]= moments(contoursY[i],false);
                 }          
 
-                Mat drawing= Mat::zeros(cannyOutput.size(), CV_8UC3);
-                vector<Point2f> mc (contours.size());
-                for(int unsigned i=0; i< contours.size();i++){
-                    mc[i]= Point2f(mu[i].m10/mu[i].m00, mu[i].m01/mu[i].m00);
-                }
+                Mat drawingB= Mat::zeros(cannyOutputB.size(), CV_8UC3);
+                Mat drawingY= Mat::zeros(cannyOutputY.size(), CV_8UC3);
                 
-                for(int unsigned i =0; i<contours.size(); i++){
-                    Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
+                Point2f mcB [6000];
+                for(int unsigned i=0; i< contoursB.size();i++){
+                    mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
+                }
+                Point2f mcY [6000];
+                for(int unsigned i=0; i< contoursY.size();i++){
+                    mcY[i]= Point2f(muY[i].m10/muY[i].m00, muY[i].m01/muY[i].m00);
+                }
+                Point leftCorner = Point(0, 480);
+                Point rightCorner = Point(640, 480);
+                
+                Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
+                for(int unsigned i =0; i<contoursB.size(); i++){
+                   // Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
                    // drawContours(drawing, contour_poly, (int)i, color);
-                    rectangle(drawing,boundRect[i].tl(), boundRect[i].br(), color,2);
-                    circle(drawing,mc[i],4,color,-1,8,0);                
+                    //rectangle(drawing,boundRect[i].tl(), boundRect[i].br(), color,2); // tl() is topleft corner, br() bottom right coner 
+                    circle(drawingB,mcB[i],4,color,-1,8,0);    
+                                
                     //polylines(drawing, mc[i],1, Scalar(0,255,0),2,8,0);
+                    if(i>0){
+                        //line(img, mcB[i-1], mcB[i], color,5 );
+                        line(img, leftCorner, mcB[i], color,5 );
+                    } else{
+                        line(img, mcB[i], mcB[i+1], color,5 );
+                    }
+                    
+                    }
+                for(int unsigned i=0; i<contoursY.size(); i++){
+                    circle(drawingY,mcY[i],4,color,-1,8,0); 
+                    //line(drawingY, mcY[i], mcY[i+1], color,5 );
+                     if(i>0){
+                        //line(img, mcY[i-1], mcY[i], color,5 );
+                        line(img, rightCorner, mcY[i], color,5 );
+                    }else{
+                        line(img, mcY[i], mcY[i+1], color,5 );
+                    }
                 }
-                //std::cout << "the contours" << contours.size() <<endl;
-                //std::count<<contours[1] <<endl;
+                Mat lol= drawingY+drawingB;
+                */
+
+               // alpha_slider = 0;
+                slider_dst = img.clone();
+                namedWindow("Linear Blend", WINDOW_AUTOSIZE);
+                char TrackbarName[50];
+                char TrackbarName2[50];
+                char TrackbarName3[50];
+    
+                sprintf( TrackbarName, "Point 1 x: %d", alpha_slider_max );
+                sprintf( TrackbarName2, "Point 2 x: %d", 640 );
+                sprintf( TrackbarName3, "Point y: %d", 300 );
+                //sprintf( TrackbarName4, "Point 2 y: %d", 300 );
+                createTrackbar( TrackbarName, "Linear Blend", &slider_x_left, alpha_slider_max, on_trackbar );
+                createTrackbar( TrackbarName2, "Linear Blend", &slider_x_right, alpha_slider_max, on_trackbar );
+                createTrackbar( TrackbarName3, "Linear Blend", &slider_y, alpha_slider_max, on_trackbar );
+                //createTrackbar( TrackbarName4, "Linear Blend", &slider_y_right, alpha_slider_max, on_trackbar );
+
+                on_trackbar( slider_x_left, 0 );
+                on_trackbar( slider_y, 0 );
+                on_trackbar( slider_x_right, 0 );
+                //on_trackbar( slider_y_right, 0 );
+
+                /*cv::Point left = cv::Point(slider_x_left, slider_y_left);
+
+                color= cv::Scalar(255,0,0);
+                cv::circle(img, left,4,color,-1,8,0); */
+                Mat fullNoise = blueConesClose + yellowConesClose;
+                Mat warpedImg;
+                Mat gray;
+                Mat detectedEdges;
+                Mat combinedImg;
+
+                cvtColor(img, gray, CV_BGR2GRAY);
+                blur(gray, detectedEdges,Size(3,3));
+                Canny(detectedEdges, detectedEdges,127, 255, 3);
+                combinedImg = fullNoise;
+
+                //warpedImg = combinedImg.clone();
+                vector <Point2f> src_1[6000];
 
 
+                /*
+                for(int unsigned i=0; i<6000 ; i++ ){
+                    src_1.push_back(mcB[i].x, mcB[i].y);
+                    src_1.push_back(mcB[i+1].x,mcB[i+1].y);
+                    src_1.push_back(mcY[i].x, mcY[i].y);
+                    src_1.push_back(mcY[i+1].x, mcY[i+1].y);
+                }
+                */
 
-                //long way 
-                cv::Mat blueConesFinal(blueConesClose);
-                cv::Mat croppedImageBlue = blueConesFinal(myROI);
+                vector <Point2f> pts1;
+                pts1.push_back(Point2f(slider_x_left, slider_y));
+                pts1.push_back (Point2f(slider_x_right, slider_y));
+                pts1.push_back(Point2f(0, 386));
+                pts1.push_back (Point2f(632, 386));
+                
+                vector <Point2f> pts2;
+                pts2.push_back(Point2f(0,0));
+                pts2.push_back(Point2f(WIDTH,0));
+                pts2.push_back(Point2f(0,HEIGHT));
+                pts2.push_back(Point2f(WIDTH,HEIGHT));
 
-               cv::Mat yellowConesFinal(yellowConesClose);
-                cv::Mat croppedImageYellow = yellowConesFinal(myROI);
+                Mat matrix = getPerspectiveTransform(pts1,pts2);
+                
+                warpPerspective(combinedImg, warpedImg, matrix, img.size());
+                Mat cannyMany; 
+                Canny(warpedImg, cannyMany,127, 255, 3);
+                Mat toShow= cannyMany+warpedImg;
+                 RNG rng(12345);
+                Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
+               
+                vector<vector<Point> > contoursF;
+                findContours(toShow, contoursF,RETR_TREE,CHAIN_APPROX_SIMPLE); 
+                vector<vector<Point> > contour_poly1(contoursF.size() );
+                vector<Rect> boundRect1( contoursF.size() );
+                 vector<Moments> mu2 (contoursF.size());
+                 for(size_t i=0; i<contoursF.size();i++){
+                    mu2[i]= moments(contoursF[i], false);
+                    approxPolyDP(contoursF[i], contour_poly1[i], 3, true); 
+                    boundRect1[i]= boundingRect(contour_poly1[i]);
+                 }
+                 Mat bro= Mat::zeros(cannyMany.size(), CV_8UC3);
+                  vector<Point2f> mcF (contoursF.size());
+                for(int unsigned i=0; i< contoursF.size();i++){
+                    mcF[i]= Point2f(mu2[i].m10/mu2[i].m00, mu2[i].m01/mu2[i].m00);
+                }
 
-                //cv::Mat topHalfFinal(topHalf);
-                //cv::Mat croppedImageTop = topHalfFinal(myROITop);
+                for(int unsigned i =0; i<contoursF.size(); i++){
+                    drawContours(bro, contour_poly1, (int)i, color);
+                    rectangle(bro,boundRect1[i].tl(), boundRect1[i].br(), color,2);
+                    circle(bro,mcF[i],4,color,-1,8,0);  
+                     line(bro, mcF[i], mcF[i+1], color,5 );
+                
+                }
+                vector<Vec2f> l;
+                //an attempt to apply houghlines
+                HoughLines(cannyMany,l, 1,CV_PI/180,150,0,0 );
+               for(int unsigned i =0; l.size();i++){
+                           float rho = l[i][0], theta = l[i][1];
+                            Point pt1, pt2;
+                            double a = cos(theta), w = sin(theta);
+                            double x0 = a*rho, y0 = w*rho;
+                            pt1.x = cvRound(x0 + 1000*(-w));
+                            pt1.y = cvRound(y0 + 1000*(a));
+                            pt2.x = cvRound(x0 - 1000*(-w));
+                            pt2.y = cvRound(y0 - 1000*(a));
+                            line( toShow, pt1, pt2, Scalar(0,0,255), 3, LINE_AA);
 
-                result2 = croppedImageBlue + croppedImageYellow;
-                //result3 = result2 + topHalf;
-                //cv::vconcat(croppedImageTop, result2, result3);
-                //long way ends here 
+               }
 
                 
-                       
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
+
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
                 }
- 
+                
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
-                   // cv::imshow("show output", blueCones);
-                    //cv::imshow("show output 2", yellowCones);
-                    cv::imshow("resultn", result2);
-                    cv::imshow("result", cannyOutput);
-                    cv::imshow("the drawing", drawing);
-                    
+                   // cv::imshow("the area of interest", cannyBoth);
+                    //cv::imshow("blue and yellow cones with rectangle", r);
+                    cv::imshow("warped image", toShow);
+                    cv::imshow("with rect", bro);
+                    //cv::imshow("detected edges", detectedEdges);
+                     //cv::imshow("combined image", combinedImg);
+                    //cv::imshow( "Linear Blend", img);
+                    //cv::imshow("with lines and circles", lol);
+
                     cv::waitKey(1);
                 }
             }
@@ -211,3 +379,14 @@ int32_t main(int32_t argc, char **argv) {
     }
     return retCode;
 }
+
+static void on_trackbar( int, void* )
+{
+   cv::Point left = cv::Point(slider_x_left, slider_y);
+   cv::Point right = cv::Point(slider_x_right, slider_y);
+   cv::Scalar color= cv::Scalar(255,0,0);
+   cv::circle(slider_dst, left,4,color,-1,8,0); 
+   cv::circle(slider_dst, right,4,color,-1,8,0); 
+   cv::imshow( "Linear Blend", slider_dst);
+}
+

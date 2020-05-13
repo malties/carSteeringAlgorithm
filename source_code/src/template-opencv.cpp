@@ -110,8 +110,11 @@ int32_t main(int32_t argc, char **argv) {
                 cvtColor(img,hsv,COLOR_BGR2HSV); 
 
                 inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
-                       
-                inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
+                    
+               
+                //inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
+                
+                inRange(hsv, Scalar(10,91,72),Scalar(113,225,228), yellowCones);
 
                 //inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
 
@@ -124,11 +127,18 @@ int32_t main(int32_t argc, char **argv) {
 
                 cv::Rect myROI(0,200,640,280); // sets boundries for area we are interested in 
                // cv::Rect myROITop(0,100,640,230);
+               Rect c(0,210, 640, 270);
+
+
             
                
                Mat r= blueConesClose+ yellowConesClose;
-               cv::rectangle(r, cv::Point(50, 50), cv::Point(200, 200), cv::Scalar(255,0,0));
-            Mat croppedImg= r(myROI);   
+               Mat test1= r(c);
+               cv::rectangle(r, cv::Point(300, 397), cv::Point(440, 480), cv::Scalar(255,0,0));
+                
+                cout<<"width: " << r.size().width<<endl;
+                cout<< "height: " << r.size().height<<endl;
+             Mat croppedImg= r(myROI);   
                 
             
                 //the code here for the purpose of creating 
@@ -194,6 +204,9 @@ int32_t main(int32_t argc, char **argv) {
 
                         line(drawingB, mcB[i-1], mcB[i], color,5 );
                     }
+                    else{
+                        line(drawingB, mcB[i], mcB[i+1], color,5 );
+                    }
                     
                 }
                 for(int unsigned i=0; i<contoursY.size(); i++){
@@ -205,6 +218,7 @@ int32_t main(int32_t argc, char **argv) {
                     }
                 }
                 Mat lol= drawingY+drawingB;
+                /*
                 float foo[mcB.size()+mcY.size()];
 
                 vector<Point2f> mcS (mcB.size()+mcY.size());
@@ -219,11 +233,10 @@ int32_t main(int32_t argc, char **argv) {
                     float power= pow(dif,2);
                     float power2= pow(dif2,2);
                     float ready= power+power2;
-                    int foo[i]=sqrt(ready);
+                    foo[i]=sqrt(ready);
                     cout<< foo[i] <<endl; 
                 }
-                
-                
+                */
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
@@ -234,9 +247,9 @@ int32_t main(int32_t argc, char **argv) {
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                    
-                    cv::imshow("the area of interest", croppedImg);
-                    cv::imshow("blue and yellow cones with rectangle", r);
-                    cv::imshow("with lines and circles", lol);
+                    cv::imshow("the area of interest", test1);
+                    cv::imshow("blue and yellow", r);
+                    //cv::imshow("with lines and circles", lol);
                     
                     
                  

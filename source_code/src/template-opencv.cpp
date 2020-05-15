@@ -77,16 +77,37 @@ int32_t main(int32_t argc, char **argv) {
             cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
  
             opendlv::proxy::GroundSteeringRequest gsr;
+            //opendlv::proxy:: sampleTimePointRequest stp;
             std::mutex gsrMutex;
             auto onGroundSteeringRequest = [&gsr, &gsrMutex](cluon::data::Envelope &&env){
                 // The envelope data structure provide further details, such as sampleTimePoint as shown in this test case:
                 // https://github.com/chrberger/libcluon/blob/master/libcluon/testsuites/TestEnvelopeConverter.cpp#L31-L40
                 std::lock_guard<std::mutex> lck(gsrMutex);
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
+                //stp= cluon::extractMessage<opendlv::proxy::sampleTimePointRequest>(std::move(env.sampleTimeStamp().Microseconds()));
                 std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
+                //std::cout<< "timeStamp= "<< stp.sampleTimeStamp()<<std::endl;
             };
+            od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
+            
+            double dis; 
+            opendlv::proxy::DistanceReading dr;
+            std::mutex drMutex;
+
+            auto onDistanceReadingRequest=[&dr, &drMutex, &dis](cluon::data::Envelope &&env){
+                std::lock_guard<std::mutex> lck(drMutex);
+                
+                dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
+                std::cout << "distance from the file = " << dr.distance() << std::endl;
+                dis= (dr.distance()/2)/29.1;
+                std::cout << "actual distance = " << dis << std::endl;
+
+            };
+
+            od4.dataTrigger(opendlv::proxy::DistanceReading::ID(),onDistanceReadingRequest);
+            
  
-            od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(), onGroundSteeringRequest);
+            
  
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
@@ -104,6 +125,12 @@ int32_t main(int32_t argc, char **argv) {
                     img = wrapped.clone();
                 }
                 // TODO: Here, you can add some code to check the sampleTimePoint when the current frame was captured.
+                
+                using std::endl;
+                
+                cluon::data::TimeStamp tid= cluon::time::now();
+                int64_t na= cluon::time::toMicroseconds(tid);
+                std::cout << "the timeStamps"<< na<< endl;
                 sharedMemory->unlock();
  
                 // TODO: Do something with the frame.
@@ -125,178 +152,178 @@ int32_t main(int32_t argc, char **argv) {
                 cv:: Mat topHalf;
               
                 cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
-                cvtColor(img,hsv,COLOR_BGR2HSV);
-               
-               //range for blue cones
+                
+                
+                cvtColor(img,hsv,COLOR_BGR2HSV); 
+
                 inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
-               // inRange(hsv, Scalar(105,141,31),Scalar(130,235,255), blueCones);
-                       
                
-           //TODO: find range for yellow cones
+                    
                 inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
-                //inRange(hsv, Scalar(18,141,14),Scalar(34,235,255), yellowCones);
+                
 
                 inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
 
-                //result = blueCones;
-                //result2 = blueCones + yellowCones;
-
-
-                //morph open removes white noise
-                //morph close removes black noise 
+                
+                //Opening and closing are used for getting rid of noise
                 cv::morphologyEx(blueCones, blueConesOpen,cv::MORPH_OPEN,Kernel);
                 cv::morphologyEx(blueConesOpen, blueConesClose,cv::MORPH_CLOSE,Kernel); 
 
                 cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
                 cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
-                cv::morphologyEx(blueCones, blueConesOpen,cv::MORPH_OPEN,Kernel);
-                cv::morphologyEx(blueConesOpen, blueConesClose,cv::MORPH_CLOSE,Kernel); 
 
-                cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
-                cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
+                //Mat r= blueConesClose + yellowConesClose;
 
-                Mat r= blueConesClose + yellowConesClose;
-
-                Mat back;
+               
 
                //this is the short way
                cv::Rect myROI(0,200,640,280);
                //cv::Rect myROI(0,250,640,100);
                cv::Rect myROITop(0,100,640,200);
                //cv::rectangle(r, cv::Point(50, 50), cv::Point(200, 200), cv::Scalar(255,0,0)); 
-               Mat croppedImg= r(myROI);   
+               //Mat croppedImg= r(myROI);   
                
-
-               cv::Mat topHalfFinal(topHalf);
+                cv::Mat topHalfFinal(topHalf);
                cv::Mat croppedImageTop = topHalfFinal(myROITop);
 
+               //The code below is the code that is currently being used
 
-            
-                //the code here for the purpose of creating 
-               Mat b=blueConesClose(myROI);
-               Mat bWhole;
-               cv::vconcat(croppedImageTop, b, bWhole);
+              
 
-               Mat y=yellowConesClose(myROI);
-               Mat yWhole;
-               cv::vconcat(croppedImageTop, y, yWhole);
-
-                Mat cannyOutputB;
-                Mat cannyOutputY;
-
-                vector<vector<Point> > contoursB;
-                vector<vector<Point> > contoursY;
-                vector<Vec4i> hierarchy;
-                RNG rng(12345);
-            
-                Canny(yWhole, cannyOutputY,127, 255, 3); //create gray image of the original image
-                Canny(bWhole, cannyOutputB,127,255,3);
-
-                Mat cannyBoth = cannyOutputB + cannyOutputY;
-
-                findContours(cannyOutputB, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); //outputs array of arrays, contours are basically the boundaries of a shape in (x,y), CHAIN_APPROX_SIMPLE removes redundant coordinates
-                findContours(cannyOutputY, contoursY,RETR_TREE,CHAIN_APPROX_SIMPLE);
-
-                vector<Rect> boundRect( contoursB.size() ); //only needed for rectangle
-                
-              //  vector<vector<Point> > contour_poly(contours.size() ); //array of array
-                vector<Moments> muB (contoursB.size());
-                vector<Moments> muY (contoursY.size());
-
-
-                for(size_t i=0; i<contoursB.size();i++){
-                    muB[i]= moments(contoursB[i], false);
-                   // approxPolyDP(contours[i], contour_poly[i], 3, true); //this method approximates a polygonal curve with specified precision
-                    //boundRect[i]= boundingRect(contour_poly[i]); //boundingRect calculates the up-right bounding rectangle of a point set. 
-                    // input of boundingRect is a curve of 2D pints 
-                    //The functions approxPolyDP approximate a curve or a polygon with another curve/polygon 
-                    //with less vertices so that the distance between them is less or equal to the specified precision. 
-                }
-                for(size_t i=0; i<contoursY.size();i++){
-                    muY[i]= moments(contoursY[i],false);
-                }          
-
-                Mat drawingB= Mat::zeros(cannyOutputB.size(), CV_8UC3);
-                Mat drawingY= Mat::zeros(cannyOutputY.size(), CV_8UC3);
-                
-                vector<Point2f> mcB (contoursB.size());
-                for(int unsigned i=0; i< contoursB.size();i++){
-                    mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
-                }
-                vector<Point2f> mcY (contoursY.size());
-                for(int unsigned i=0; i< contoursY.size();i++){
-                    mcY[i]= Point2f(muY[i].m10/muY[i].m00, muY[i].m01/muY[i].m00);
-                }
-                Point leftCorner = Point(0, 480);
-                Point rightCorner = Point(640, 480);
-                //vector<vector<Point> > l;
-                //l= [0,0];
-                Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
-                for(int unsigned i =0; i<contoursB.size(); i++){
-                   // Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
-                   // drawContours(drawing, contour_poly, (int)i, color);
-                    //rectangle(drawing,boundRect[i].tl(), boundRect[i].br(), color,2); // tl() is topleft corner, br() bottom right coner 
-                    circle(drawingB,mcB[i],4,color,-1,8,0);    
-                                
-                    //polylines(drawing, mc[i],1, Scalar(0,255,0),2,8,0);
-                    /*if(i>0){
-                        //line(img, mcB[i-1], mcB[i], color,5 );
-                        line(img, leftCorner, mcB[i], color,5 );
-                    } else{
-                        line(img, mcB[i], mcB[i+1], color,5 );
-                    }*/
-                    
-                }
-                for(int unsigned i=0; i<contoursY.size(); i++){
-                    circle(drawingY,mcY[i],4,color,-1,8,0); 
-                    //line(drawingY, mcY[i], mcY[i+1], color,5 );
-                    /* if(i>0){
-                        //line(img, mcY[i-1], mcY[i], color,5 );
-                        line(img, rightCorner, mcY[i], color,5 );
-                    }else{
-                        line(img, mcY[i], mcY[i+1], color,5 );
-                    }*/
-                }
-                Mat lol= drawingY+drawingB;
-
-               // alpha_slider = 0;
+                //The following code between line 171 and 187 is used for making trackbars that adjust the x and y coordinates
+                //for the top two warp points. It's used to make finding the points on the image easier
                 slider_dst = img.clone();
-                namedWindow("Linear Blend", WINDOW_AUTOSIZE);
-                char TrackbarName[50];
+                namedWindow("Linear Blend", WINDOW_AUTOSIZE);  //This is the window that the track bar will be displayed in
+                char TrackbarName[50];  //Each trackbar has a name
                 char TrackbarName2[50];
                 char TrackbarName3[50];
     
-                sprintf( TrackbarName, "Point 1 x: %d", alpha_slider_max );
-                sprintf( TrackbarName2, "Point 2 x: %d", 640 );
-                sprintf( TrackbarName3, "Point y: %d", 300 );
-                //sprintf( TrackbarName4, "Point 2 y: %d", 300 );
+                sprintf( TrackbarName, "Point 1 x: %d", WIDTH );  //This sets the length for each trackbar as well as the text beside it
+                sprintf( TrackbarName2, "Point 2 x: %d", WIDTH );
+                sprintf( TrackbarName3, "Point y: %d", HEIGHT );
+                //This creates the trackbar.  Includes its name, the name of the window it will appear in, the starting value of its slider,
+                //the maximum value of its slider, and the method that will be called when it is moved.
                 createTrackbar( TrackbarName, "Linear Blend", &slider_x_left, alpha_slider_max, on_trackbar );
                 createTrackbar( TrackbarName2, "Linear Blend", &slider_x_right, alpha_slider_max, on_trackbar );
                 createTrackbar( TrackbarName3, "Linear Blend", &slider_y, alpha_slider_max, on_trackbar );
-                //createTrackbar( TrackbarName4, "Linear Blend", &slider_y_right, alpha_slider_max, on_trackbar );
-
+                //these are the methods that are called when the trackbar is moved.
                 on_trackbar( slider_x_left, 0 );
                 on_trackbar( slider_y, 0 );
                 on_trackbar( slider_x_right, 0 );
-                //on_trackbar( slider_y_right, 0 );
+                //These are the output and input values for the various imaging filtering methods
+                
+                Mat gBlurredImgBlue;
+                Mat dilatedImgBlue;
+                Mat cannyDilateBlue;
+                Mat warpedImgBlue;
 
-                /*cv::Point left = cv::Point(slider_x_left, slider_y_left);
+                Mat gBlurredImgYellow;
+                Mat dilatedImgYellow;
+                Mat cannyDilateYellow;
+                Mat warpedImgYellow;
 
-                color= cv::Scalar(255,0,0);
-                cv::circle(img, left,4,color,-1,8,0); */
-                Mat fullNoise = blueCones + yellowCones;
-                Mat warpedImg;
-                Mat gray;
-                Mat detectedEdges;
-                Mat combinedImg;
+                Mat warpedImgCombined;
+                //Both the blue and the yellow cones are givven a gaussian blur, dilated, and put through the canny method
+                //Canny detects the edges of a given image
 
-                cvtColor(img, gray, CV_BGR2GRAY);
-                blur(gray, detectedEdges,Size(3,3));
-                Canny(detectedEdges, detectedEdges,127, 255, 3);
-                combinedImg = fullNoise + detectedEdges;
 
-                //warpedImg = combinedImg.clone();
+
+                //might be unnecessary
+                GaussianBlur(blueCones,gBlurredImgBlue,Size(5,5),0);
+                dilate(gBlurredImgBlue, dilatedImgBlue, Mat(), Point(-1, -1), 2, 1, 1); 
+                Canny(dilatedImgBlue, cannyDilateBlue, 127,255,3);
+
+                GaussianBlur(yellowCones,gBlurredImgYellow,Size(5,5),0);
+                dilate(gBlurredImgYellow, dilatedImgYellow, Mat(), Point(-1, -1), 2, 1, 1); 
+                Canny(dilatedImgYellow, cannyDilateYellow, 127,255,3);
+
+
+
+                vector <Point2f> src_1[6000];
+                //These are the points from the original image that will be stretched out in the perspective warp.  
+                //pts1 is the array of points.  
+                vector <Point2f> pts1;
+                pts1.push_back(Point2f(slider_x_left, slider_y));  //The x and y coordinates of the top two points can be adjusted with the
+                pts1.push_back (Point2f(slider_x_right, slider_y)); //track bar
+                pts1.push_back(Point2f(0, 386));
+                pts1.push_back (Point2f(632, 386));
+                //These are the corners of the new image that the section of the image within the previous points will be sretched into
+                //These points basically determine the width and height of the new image which will be the same as the original image
+                vector <Point2f> pts2;
+                pts2.push_back(Point2f(0,0));
+                pts2.push_back(Point2f(WIDTH,0));
+                pts2.push_back(Point2f(0,HEIGHT));
+                pts2.push_back(Point2f(WIDTH,HEIGHT));
+                //The matrix in the points on the original image that are to be stretched out and the new points thew will be 
+                //stretched out to
+                Mat matrix = getPerspectiveTransform(pts1,pts2);
+                
+                //The warp perspective is what stretches out the selected region of the image
+               // warpPerspective(cannyDilateBlue, warpedImgBlue, matrix, img.size());
+               // warpPerspective(cannyDilateYellow, warpedImgYellow, matrix, img.size());
+
+                warpPerspective(blueConesClose, warpedImgBlue, matrix, img.size());
+                warpPerspective(yellowConesClose, warpedImgYellow, matrix, img.size());
+
+                Mat cannyImage; 
+                warpedImgCombined= warpedImgBlue + warpedImgYellow; 
+                Canny(warpedImgCombined, cannyImage, 127,255,3);
+
+                //This combines the warped images for the blue and yellow cones.
+                //warpedImgCombined = warpedImgBlue + warpedImgYellow; 
+
+
+                RNG rng(12345);
+                
+                Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
+               
+                
+                vector<vector<Point> > contoursB;
+                vector<vector<Point> > contoursY;
+
+                findContours(warpedImgBlue, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); 
+                //findContours(warpedImgYellow, contoursY,RETR_TREE,CHAIN_APPROX_SIMPLE);
+
+                vector<vector<Point> > contour_polyB(contoursB.size() );
+                //vector<vector<Point> > contour_polyY(contoursY.size() );
+                vector<Rect> boundRectB( contoursB.size() );
+                //vector<Rect> boundRectY( contoursY.size() );
+                vector<Moments> muB (contoursB.size());
+               // vector<Moments> muY (contoursY.size());
+
+                //the following is necessary to find the edges of a square that can contain the cones.
+                 for(size_t i=0; i<contoursB.size();i++){
+                    muB[i]= moments(contoursB[i], false);
+                    approxPolyDP(contoursB[i], contour_polyB[i], 3, true); 
+                    boundRectB[i]= boundingRect(contour_polyB[i]);
+                 }
+
+                 //following is code for yellow 
+                 /*
+                  for(size_t i=0; i<contoursY.size();i++){
+                    muY[i]= moments(contoursY[i], false);
+                    approxPolyDP(contoursY[i], contour_polyY[i], 3, true); 
+                    boundRectY[i]= boundingRect(contour_polyY[i]);
+                 }
+                 */
+
+                Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
+                vector<Point2f> mcB (contoursB.size());
+                
+                //vector<Point2f> mcY (contoursY.size());
+
+                //The following fills out mcB with cones' coordinates 
+                for(int unsigned i=0; i< contoursB.size();i++){
+                    mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
+                }
+
+
+                /*
+                for(int unsigned i=0; i< contoursY.size();i++){
+                    mcY[i]= Point2f(muY[i].m10/muY[i].m00, muY[i].m01/muY[i].m00);
+                }
+                */
 
                 vector <Point2f> pts1;
                 pts1.push_back(Point2f(slider_x_left, slider_y));
@@ -304,15 +331,30 @@ int32_t main(int32_t argc, char **argv) {
                 pts1.push_back(Point2f(0, 386));
                 pts1.push_back (Point2f(632, 386));
                 
-                vector <Point2f> pts2;
-                pts2.push_back(Point2f(0,0));
-                pts2.push_back(Point2f(WIDTH,0));
-                pts2.push_back(Point2f(0,HEIGHT));
-                pts2.push_back(Point2f(WIDTH,HEIGHT));
-
-                Mat matrix = getPerspectiveTransform(pts1,pts2);
+                Point lineStart = Point(320, 400);
+                for(int unsigned i =0; i<contoursB.size(); i++){
+                    drawContours(drawing, contour_polyB, (int)i, color);
+                    rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
+                    circle(drawing,mcB[i],4,color,-1,8,0);
+                   /* if(i>0) {
+                        line(drawing, mcB[i-1], mcB[i], color,5 );
+                    } */  
+                    line(drawing, lineStart, mcB[i], color, 5);
                 
-                warpPerspective(combinedImg, warpedImg, matrix, img.size());
+                }
+                
+                /*
+                for(int unsigned i =0; i<contoursY.size(); i++){
+                    drawContours(drawing, contour_polyY, (int)i, color);
+                    rectangle(drawing,boundRectY[i].tl(), boundRectY[i].br(), color,2);
+                    circle(drawing,mcY[i],4,color,-1,8,0);
+                    if(i>0) {
+                        line(drawing, mcY[i-1], mcY[i], color,5 );
+                    }
+                    line(drawing, lineStart, mcY[i], Scalar(0,255,0), 5);    
+                
+                }
+                */
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
 
@@ -324,13 +366,12 @@ int32_t main(int32_t argc, char **argv) {
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
-                   // cv::imshow("the area of interest", cannyBoth);
-                    //cv::imshow("blue and yellow cones with rectangle", r);
-                    cv::imshow("warped image", warpedImg);
-                    //cv::imshow("detected edges", detectedEdges);
-                     //cv::imshow("combined image", combinedImg);
-                    //cv::imshow( "Linear Blend", img);
-                    //cv::imshow("with lines and circles", lol);
+                    
+                    cv::imshow("with rect", drawing);
+                    cv::imshow("cones", warpedImgCombined);
+                    //cv::imshow("with g blurr", gBlurredImg);
+                    //cv::imshow("with dilation", dilatedImg);
+                    //cv::imshow("with dilation and canny", cannyDilateYellow);
 
                     cv::waitKey(1);
                 }

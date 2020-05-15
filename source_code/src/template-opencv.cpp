@@ -88,14 +88,18 @@ int32_t main(int32_t argc, char **argv) {
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
             
+            double dis; 
             opendlv::proxy::DistanceReading dr;
             std::mutex drMutex;
 
-            auto onDistanceReadingRequest=[&dr, &drMutex](cluon::data::Envelope &&env){
+            auto onDistanceReadingRequest=[&dr, &drMutex, &dis](cluon::data::Envelope &&env){
                 std::lock_guard<std::mutex> lck(drMutex);
                 
                 dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
-                std::cout << "lambda: distance = " << dr.distance() << std::endl;
+                std::cout << "distance from the file = " << dr.distance() << std::endl;
+                dis= (dr.distance()/2)/29.1;
+                std::cout << "actual distance = " << dis << std::endl;
+
             };
 
             od4.dataTrigger(opendlv::proxy::DistanceReading::ID(),onDistanceReadingRequest);

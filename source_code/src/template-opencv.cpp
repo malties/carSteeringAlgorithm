@@ -104,9 +104,7 @@ int32_t main(int32_t argc, char **argv) {
 
             od4.dataTrigger(opendlv::proxy::DistanceReading::ID(),onDistanceReadingRequest);
             
- 
             
- 
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
                 // OpenCV data structure to hold an image.
@@ -274,7 +272,7 @@ int32_t main(int32_t argc, char **argv) {
                 
                 Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
                
-                
+            
                 vector<vector<Point> > contoursB;
                 vector<vector<Point> > contoursY;
 
@@ -322,7 +320,7 @@ int32_t main(int32_t argc, char **argv) {
                 */
 
                 
-                Point lineStart = Point(320, 400);
+                Point lineStart = Point(320, 450);
                 for(int unsigned i =0; i<contoursB.size(); i++){
                     drawContours(drawing, contour_polyB, (int)i, color);
                     rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
@@ -330,7 +328,17 @@ int32_t main(int32_t argc, char **argv) {
                    /* if(i>0) {
                         line(drawing, mcB[i-1], mcB[i], color,5 );
                     } */  
+
                     line(drawing, lineStart, mcB[i], color, 5);
+                    line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
+                    line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
+
+                    float bLength = 450 - mcB[i].y;
+                    float cLength =  320 - mcB[i].x;
+                    float aLength = sqrt(pow(bLength,2) + pow(cLength,2));
+
+                    cout<<"Length of A: "<< aLength << endl; 
+                    
                 
                 }
                 
@@ -342,8 +350,7 @@ int32_t main(int32_t argc, char **argv) {
                     if(i>0) {
                         line(drawing, mcY[i-1], mcY[i], color,5 );
                     }
-                    line(drawing, lineStart, mcY[i], Scalar(0,255,0), 5);    
-                
+                    line(drawing, lineStart, mcY[i], Scalar(0,255,0), 5);                    
                 }
                 */
 

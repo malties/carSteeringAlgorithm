@@ -96,6 +96,7 @@ int32_t main(int32_t argc, char **argv) {
             opendlv::proxy::GroundSteeringRequest gsr;
             
             std::mutex gsrMutex;
+           
             auto onGroundSteeringRequest = [&gsr, &gsrMutex](cluon::data::Envelope &&env){
                 // The envelope data structure provide further details, such as sampleTimePoint as shown in this test case:
                 // https://github.com/chrberger/libcluon/blob/master/libcluon/testsuites/TestEnvelopeConverter.cpp#L31-L40
@@ -104,6 +105,7 @@ int32_t main(int32_t argc, char **argv) {
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
                 std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< "the groundSteering angle is: "<<  gsr.groundSteering()<<std::endl;
+                
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
             
@@ -232,49 +234,15 @@ int32_t main(int32_t argc, char **argv) {
 
                 findContours(warpedImgBlue, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); 
                 
-                //findContours(warpedImgYellow, contoursY,RETR_TREE,CHAIN_APPROX_SIMPLE);
-
-                vector<vector<Point> > contour_polyB(contoursB.size() );
-                vector<Rect> boundRectB( contoursB.size() );
-                vector<Moments> muB (contoursB.size());
+                
 
                 findCoordinates(contoursB);
                  
 
-                //the following is necessary to find the edges of a square that can contain the cones.
-
-                /*
-                 for(size_t i=0; i<contoursB.size();i++){
-                    muB[i]= moments(contoursB[i], false);
-                    approxPolyDP(contoursB[i], contour_polyB[i], 3, true); 
-                    boundRectB[i]= boundingRect(contour_polyB[i]);
-                 }
-                 */
-
-                 //following is code for yellow 
-                 /*
-                  for(size_t i=0; i<contoursY.size();i++){
-                    muY[i]= moments(contoursY[i], false);
-                    approxPolyDP(contoursY[i], contour_polyY[i], 3, true); 
-                    boundRectY[i]= boundingRect(contour_polyY[i]);
-                 }
-                 */
+                
 
                 Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
-                //vector<Point2f> mcB (contoursB.size());
                 
-                //vector<Point2f> mcY (contoursY.size());
-
-                //The following fills out mcB with cones' coordinates 
-                /*
-                for(int unsigned i=0; i< contoursB.size();i++){
-                    mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
-                }
-                /*
-                for(int unsigned i=0; i< contoursY.size();i++){
-                    mcY[i]= Point2f(muY[i].m10/muY[i].m00, muY[i].m01/muY[i].m00);
-                }
-                */
 
                 double aLength[1000];
                 double bLength;
@@ -285,7 +253,7 @@ int32_t main(int32_t argc, char **argv) {
 
                 Point lineStart = Point(320, 450);
                 for(int unsigned i =0; i<contoursB.size(); i++){
-                    drawContours(drawing, contour_polyB, (int)i, color);
+                   // drawContours(drawing, contour_polyB, (int)i, color);
                     //rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
                     circle(drawing,mcB[i],4,color,-1,8,0);
                    /* if(i>0) {
@@ -305,9 +273,6 @@ int32_t main(int32_t argc, char **argv) {
                     
                     inverse= atan(cLength/bLength);
                    
-                    //cout<<endl;
-                    //cout<<endl;
-                    
             
                     cout<<"the inverse "<<inverse<<endl;
                     angle=inverse*180/3.1415;

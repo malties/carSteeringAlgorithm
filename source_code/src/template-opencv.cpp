@@ -43,7 +43,6 @@ double beta;
 int bMinHue= 42, bMinSat=99, bMinVal= 44, bMaxHue=155, bMaxSat=200, bMaxVal=79;
 int yMinHue= 18, yMinSat=101, yMinVal= 104, yMaxHue=53, yMaxSat=255, yMaxVal=255;
 
-cv::Mat filteredCones;
 cv::Mat blueCones;
 cv::Mat yellowCones;
 
@@ -180,19 +179,12 @@ int32_t main(int32_t argc, char **argv) {
                
 
                 //Opening and closing are used for getting rid of noise
-                //cv::morphologyEx(blueCones, blueConesOpen,cv::MORPH_OPEN,Kernel);
-                //cv::morphologyEx(blueConesOpen, blueConesClose,cv::MORPH_CLOSE,Kernel); 
-
-                //cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
-                //cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
                 blueConesClose = reduceNoise(blueCones);
                 yellowConesClose = reduceNoise(yellowCones);
               
 
-               //The code below is the code that is currently being used
-
-              
+               //The code below is the code that is currently being used             
 
                 //The following code between line 171 and 187 is used for making trackbars that adjust the x and y coordinates
                 //for the top two warp points. It's used to make finding the points on the image easier
@@ -231,11 +223,6 @@ int32_t main(int32_t argc, char **argv) {
                 //Canny detects the edges of a given imag
 
                 //might be unnecessary
-                
-
-                /*GaussianBlur(yellowCones,gBlurredImgYellow,Size(5,5),0);
-                dilate(gBlurredImgYellow, dilatedImgYellow, Mat(), Point(-1, -1), 2, 1, 1); 
-                Canny(dilatedImgYellow, cannyDilateYellow, 127,255,3);*/
 
 
 
@@ -397,6 +384,7 @@ int32_t main(int32_t argc, char **argv) {
                     
                     //cv::imshow("with rect", drawing);
                     cv::imshow("cones", warpedImgBlue);
+                    cv::imshow("yellow cones", yellowCones);
                     cv::imshow("blue cones", blueCones);
                     //cv::imshow("with g blurr", gBlurredImg);
                     //cv::imshow("with dilation", dilatedImg);
@@ -422,6 +410,7 @@ static void on_trackbar( int, void* )
 }
 Mat applyFilter(Mat image, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal){
     Mat hsv;
+    Mat filteredCones;
     cvtColor(image,hsv,COLOR_BGR2HSV); 
     inRange(hsv, Scalar(minHue,minSat,minVal),Scalar(maxHue,maxSat,maxVal), filteredCones);
     

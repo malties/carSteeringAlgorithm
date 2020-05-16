@@ -40,8 +40,18 @@ int slider_x_right = 508;
 double alpha;
 double beta;
 
-static void on_trackbar( int, void* );
+int bMinHue= 42, bMinSat=99, bMinVal= 44, bMaxHue=155, bMaxSat=200, bMaxVal=79;
+int yMinHue= 18, yMinSat=101, yMinVal= 104, yMaxHue=53, yMaxSat=255, yMaxVal=255;
 
+cv::Mat filteredCones;
+cv::Mat blueCones;
+cv::Mat yellowCones;
+
+using namespace cv;
+static void on_trackbar( int, void* );
+Mat applyFilter(Mat img, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal);
+
+Mat hsv;
 cv::Mat img;
 cv::Mat slider_dst;
  
@@ -87,7 +97,7 @@ int32_t main(int32_t argc, char **argv) {
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
-               // std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< "the groundSteering angle is: "<<  gsr.groundSteering()<<std::endl;
+                std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< "the groundSteering angle is: "<<  gsr.groundSteering()<<std::endl;
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
             
@@ -139,30 +149,29 @@ int32_t main(int32_t argc, char **argv) {
  
                 using namespace std;
                 using namespace cv;
-
-                cv::Mat hsv;
-                cv::Mat blueCones;
+                //cv::Mat hsv;
+                //cv::Mat blueCones;
                 cv::Mat blueConesOpen;
                 cv::Mat blueConesClose;
 
-                cv:: Mat yellowCones;
+                //cv:: Mat yellowCones;
                 cv:: Mat yellowConesOpen;
                 cv:: Mat yellowConesClose;
-
-                cv:: Mat topHalf;
+                
               
                 cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
                 
                 
-                cvtColor(img,hsv,COLOR_BGR2HSV); 
+                //cvtColor(img,hsv,COLOR_BGR2HSV); 
 
-                inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
+               // inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
                
                     
-                inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
+                //inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
                 
-
-                inRange(hsv, Scalar(179,255,255),Scalar(179,255,255), topHalf);
+                blueCones= applyFilter(img, bMinHue,bMinSat,bMinVal, bMaxHue,bMaxSat,bMaxVal);
+               // yellowCones= applyFilter()
+               
 
                 
                 //Opening and closing are used for getting rid of noise
@@ -173,7 +182,7 @@ int32_t main(int32_t argc, char **argv) {
                 cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
 
-                //Mat r= blueConesClose + yellowConesClose;
+                
 
                
 
@@ -184,8 +193,8 @@ int32_t main(int32_t argc, char **argv) {
                //cv::rectangle(r, cv::Point(50, 50), cv::Point(200, 200), cv::Scalar(255,0,0)); 
                //Mat croppedImg= r(myROI);   
                
-                cv::Mat topHalfFinal(topHalf);
-               cv::Mat croppedImageTop = topHalfFinal(myROITop);
+               
+              
 
                //The code below is the code that is currently being used
 
@@ -381,7 +390,7 @@ int32_t main(int32_t argc, char **argv) {
                 
 
                 
-
+                
 
                 
 
@@ -405,12 +414,14 @@ int32_t main(int32_t argc, char **argv) {
                     std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
                 }
                 
+                
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     
-                    cv::imshow("with rect", drawing);
-                    cv::imshow("cones", warpedImgCombined);
+                    //cv::imshow("with rect", drawing);
+                    //cv::imshow("cones", warpedImgCombined);
+                    cv::imshow("blue cones", blueCones);
                     //cv::imshow("with g blurr", gBlurredImg);
                     //cv::imshow("with dilation", dilatedImg);
                     //cv::imshow("with dilation and canny", cannyDilateYellow);
@@ -432,5 +443,11 @@ static void on_trackbar( int, void* )
    cv::circle(slider_dst, left,4,color,-1,8,0); 
    cv::circle(slider_dst, right,4,color,-1,8,0); 
    cv::imshow( "Linear Blend", slider_dst);
+}
+Mat applyFilter(Mat image, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal){
+    cvtColor(image,hsv,COLOR_BGR2HSV); 
+    inRange(hsv, Scalar(minHue,minSat,minVal),Scalar(maxHue,maxSat,maxVal), filteredCones);
+    
+    return filteredCones;
 }
 

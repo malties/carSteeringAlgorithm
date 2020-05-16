@@ -206,23 +206,7 @@ int32_t main(int32_t argc, char **argv) {
 
                 //might be unnecessary
                 vector <Point2f> src_1[6000];
-                //These are the points from the original image that will be stretched out in the perspective warp.  
-                //pts1 is the array of points.  
-                /*vector <Point2f> pts1;
-                pts1.push_back(Point2f(slider_x_left, slider_y));  //The x and y coordinates of the top two points can be adjusted with the
-                pts1.push_back (Point2f(slider_x_right, slider_y)); //track bar
-                pts1.push_back(Point2f(0, 386));
-                pts1.push_back (Point2f(632, 386));*/
-                //These are the corners of the new image that the section of the image within the previous points will be sretched into
-                //These points basically determine the width and height of the new image which will be the same as the original image
-                /*vector <Point2f> pts2;
-                pts2.push_back(Point2f(0,0));
-                pts2.push_back(Point2f(WIDTH,0));
-                pts2.push_back(Point2f(0,HEIGHT));
-                pts2.push_back(Point2f(WIDTH,HEIGHT));*/
-                //The matrix in the points on the original image that are to be stretched out and the new points thew will be 
-                //stretched out to
-                
+            
                 warpedImgBlue = applyWarp(blueConesClose);
                 warpedImgYellow = applyWarp(yellowConesClose);
 

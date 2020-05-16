@@ -30,6 +30,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <cmath>
+#include <vector>
 
 const int alpha_slider_max = 640;
 int slider_x_left = 92;
@@ -43,7 +44,6 @@ double beta;
 int bMinHue= 42, bMinSat=99, bMinVal= 44, bMaxHue=155, bMaxSat=200, bMaxVal=79;
 int yMinHue= 18, yMinSat=101, yMinVal= 104, yMaxHue=53, yMaxSat=255, yMaxVal=255;
 
-cv::Mat filteredCones;
 cv::Mat blueCones;
 cv::Mat yellowCones;
 
@@ -52,6 +52,9 @@ using namespace cv;
 static void on_trackbar( int, void* );
 Mat applyFilter(Mat img, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal);
 Mat reduceNoise(Mat image);
+Mat applyWarp(Mat image);
+double calculateInverse(double bLength, double cLength);
+double calculateAngle(double inverse);
 
 cv::Mat img;
 cv::Mat slider_dst;
@@ -99,6 +102,7 @@ int32_t main(int32_t argc, char **argv) {
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
                 std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  gsr.groundSteering()<<std::endl;
+               return env.sampleTimeStamp().seconds();
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
             
@@ -112,7 +116,7 @@ int32_t main(int32_t argc, char **argv) {
                 dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
                 //std::cout << "distance from the file = " << dr.distance() << std::endl;
                 dis= (dr.distance()/2)/29.1;
-                //std::cout << "actual distance = " << dis << "at this timeStamp: "<< env.sampleTimeStamp().seconds()<< std::endl;
+                std::cout << "actual distance = " << dis << " at this timeStamp: "<< env.sampleTimeStamp().seconds()<< std::endl;
 
             };
 
@@ -152,25 +156,12 @@ int32_t main(int32_t argc, char **argv) {
                 //using namespace cv;
 
                 cv::Mat hsv;
-                cv::Mat blueCones;
 
                 cv::Mat blueConesOpen;
                 cv::Mat blueConesClose;
 
-                //cv:: Mat yellowCones;
                 cv:: Mat yellowConesOpen;
                 cv:: Mat yellowConesClose;
-
-                //cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
-                
-                
-                //cvtColor(img,hsv,COLOR_BGR2HSV); 
-
-               // inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
-               
-                    
-                //inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
-
 
                 Mat imgCopyBlue = img.clone();
                 Mat imgCopyYellow = img.clone();
@@ -178,24 +169,15 @@ int32_t main(int32_t argc, char **argv) {
                 
                 blueCones= applyFilter(imgCopyBlue, 42, 99, 44, 155, 200, 79);
                 yellowCones= applyFilter(imgCopyYellow, yMinHue, yMinSat, yMinVal, yMaxHue, yMaxSat, yMaxVal);
-                double calculateInverse(double bLength, double cLength);
-                double calculateAngle(double inverse);
                
 
                 //Opening and closing are used for getting rid of noise
-                //cv::morphologyEx(blueCones, blueConesOpen,cv::MORPH_OPEN,Kernel);
-                //cv::morphologyEx(blueConesOpen, blueConesClose,cv::MORPH_CLOSE,Kernel); 
-
-                //cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
-                //cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
                 blueConesClose = reduceNoise(blueCones);
                 yellowConesClose = reduceNoise(yellowCones);
               
 
-               //The code below is the code that is currently being used
-
-              
+               //The code below is the code that is currently being used             
 
                 //The following code between line 171 and 187 is used for making trackbars that adjust the x and y coordinates
                 //for the top two warp points. It's used to make finding the points on the image easier
@@ -219,54 +201,18 @@ int32_t main(int32_t argc, char **argv) {
                 on_trackbar( slider_x_right, 0 );
                 //These are the output and input values for the various imaging filtering methods
                 
-                Mat gBlurredImgBlue;
-                Mat dilatedImgBlue;
-                Mat cannyDilateBlue;
                 Mat warpedImgBlue;
-
-                Mat gBlurredImgYellow;
-                Mat dilatedImgYellow;
-                Mat cannyDilateYellow;
                 Mat warpedImgYellow;
-
                 Mat warpedImgCombined;
+
                 //Both the blue and the yellow cones are givven a gaussian blur, dilated, and put through the canny method
                 //Canny detects the edges of a given imag
 
                 //might be unnecessary
-                
-
-                /*GaussianBlur(yellowCones,gBlurredImgYellow,Size(5,5),0);
-                dilate(gBlurredImgYellow, dilatedImgYellow, Mat(), Point(-1, -1), 2, 1, 1); 
-                Canny(dilatedImgYellow, cannyDilateYellow, 127,255,3);*/
-
-
-
                 vector <Point2f> src_1[6000];
-                //These are the points from the original image that will be stretched out in the perspective warp.  
-                //pts1 is the array of points.  
-                vector <Point2f> pts1;
-                pts1.push_back(Point2f(slider_x_left, slider_y));  //The x and y coordinates of the top two points can be adjusted with the
-                pts1.push_back (Point2f(slider_x_right, slider_y)); //track bar
-                pts1.push_back(Point2f(0, 386));
-                pts1.push_back (Point2f(632, 386));
-                //These are the corners of the new image that the section of the image within the previous points will be sretched into
-                //These points basically determine the width and height of the new image which will be the same as the original image
-                vector <Point2f> pts2;
-                pts2.push_back(Point2f(0,0));
-                pts2.push_back(Point2f(WIDTH,0));
-                pts2.push_back(Point2f(0,HEIGHT));
-                pts2.push_back(Point2f(WIDTH,HEIGHT));
-                //The matrix in the points on the original image that are to be stretched out and the new points thew will be 
-                //stretched out to
-                Mat matrix = getPerspectiveTransform(pts1,pts2);
-                
-                //The warp perspective is what stretches out the selected region of the image
-               // warpPerspective(cannyDilateBlue, warpedImgBlue, matrix, img.size());
-               // warpPerspective(cannyDilateYellow, warpedImgYellow, matrix, img.size());
-
-                warpPerspective(blueConesClose, warpedImgBlue, matrix, img.size());
-                warpPerspective(yellowConesClose, warpedImgYellow, matrix, img.size());
+            
+                warpedImgBlue = applyWarp(blueConesClose);
+                warpedImgYellow = applyWarp(yellowConesClose);
 
                 Mat cannyImage; 
                 warpedImgCombined= warpedImgBlue + warpedImgYellow; 
@@ -326,7 +272,6 @@ int32_t main(int32_t argc, char **argv) {
                 */
 
 
-
                 Point lineStart = Point(320, 450);
                 for(int unsigned i =0; i<contoursB.size(); i++){
 
@@ -337,7 +282,6 @@ int32_t main(int32_t argc, char **argv) {
                         line(drawing, mcB[i-1], mcB[i], color,5 );
                     } */  
 
-                float value; //where is this used?
                 double bLength = 450 - mcB[i].y;
                 double cLength = 320 - mcB[i].x;
                 double radian {calculateInverse(bLength,cLength)};
@@ -346,7 +290,6 @@ int32_t main(int32_t argc, char **argv) {
                     cout<<"the radian "<< radian <<endl;
                     
                     cout <<"adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
-
 
                     line(drawing, lineStart, mcB[i], color, 5);
                     line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
@@ -379,7 +322,9 @@ int32_t main(int32_t argc, char **argv) {
 
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
-                    std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
+
+                  //  std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
+                    
                 }
                 
                 
@@ -389,6 +334,7 @@ int32_t main(int32_t argc, char **argv) {
                     
                     //cv::imshow("with rect", drawing);
                     cv::imshow("cones", warpedImgBlue);
+                    cv::imshow("yellow cones", yellowCones);
                     cv::imshow("blue cones", blueCones);
                     //cv::imshow("with g blurr", gBlurredImg);
                     //cv::imshow("with dilation", dilatedImg);
@@ -414,6 +360,7 @@ static void on_trackbar( int, void* )
 }
 Mat applyFilter(Mat image, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal){
     Mat hsv;
+    Mat filteredCones;
     cvtColor(image,hsv,COLOR_BGR2HSV); 
     inRange(hsv, Scalar(minHue,minSat,minVal),Scalar(maxHue,maxSat,maxVal), filteredCones);
     
@@ -432,8 +379,11 @@ Mat reduceNoise(Mat image){
 }
 
 double calculateInverse(double bLength, double cLength){
-            double inverse= atan(cLength/bLength);
-            return inverse;
+    if(bLength && cLength != 0){
+    double inverse= atan(cLength/bLength);
+    return inverse;
+    }
+    return 0;
 }
 
 double calculateAngle(double inverse){
@@ -441,5 +391,23 @@ double calculateAngle(double inverse){
     return angle;
 }
 
+Mat applyWarp(Mat image){
+    Mat warpedImg;
+    Mat matrix; 
+    std::vector <Point2f> pts1;
+    pts1.push_back(Point2f(slider_x_left, slider_y));  //The x and y coordinates of the top two points can be adjusted with the
+    pts1.push_back (Point2f(slider_x_right, slider_y)); //track bar
+    pts1.push_back(Point2f(0, 386));
+    pts1.push_back (Point2f(632, 386));
 
+    std::vector <Point2f> pts2;
+    pts2.push_back(Point2f(0,0));
+    pts2.push_back(Point2f(640,0));
+    pts2.push_back(Point2f(0,480));
+    pts2.push_back(Point2f(640,480));
+
+    matrix = getPerspectiveTransform(pts1,pts2);
+    warpPerspective(image, warpedImg, matrix, img.size());
+    return warpedImg;
+}
 

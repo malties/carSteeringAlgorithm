@@ -29,6 +29,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <cmath>
 
 const int alpha_slider_max = 640;
 int slider_x_left = 92;
@@ -77,16 +78,16 @@ int32_t main(int32_t argc, char **argv) {
             cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
  
             opendlv::proxy::GroundSteeringRequest gsr;
-            //opendlv::proxy:: sampleTimePointRequest stp;
+            
             std::mutex gsrMutex;
             auto onGroundSteeringRequest = [&gsr, &gsrMutex](cluon::data::Envelope &&env){
                 // The envelope data structure provide further details, such as sampleTimePoint as shown in this test case:
                 // https://github.com/chrberger/libcluon/blob/master/libcluon/testsuites/TestEnvelopeConverter.cpp#L31-L40
                 std::lock_guard<std::mutex> lck(gsrMutex);
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
-                //stp= cluon::extractMessage<opendlv::proxy::sampleTimePointRequest>(std::move(env.sampleTimeStamp().Microseconds()));
-                std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
-                //std::cout<< "timeStamp= "<< stp.sampleTimeStamp()<<std::endl;
+                
+               // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
+               // std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< "the groundSteering angle is: "<<  gsr.groundSteering()<<std::endl;
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
             
@@ -98,17 +99,15 @@ int32_t main(int32_t argc, char **argv) {
                 std::lock_guard<std::mutex> lck(drMutex);
                 
                 dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
-                std::cout << "distance from the file = " << dr.distance() << std::endl;
+                //std::cout << "distance from the file = " << dr.distance() << std::endl;
                 dis= (dr.distance()/2)/29.1;
-                std::cout << "actual distance = " << dis << std::endl;
+                //std::cout << "actual distance = " << dis << "at this timeStamp: "<< env.sampleTimeStamp().seconds()<< std::endl;
 
             };
 
             od4.dataTrigger(opendlv::proxy::DistanceReading::ID(),onDistanceReadingRequest);
             
- 
             
- 
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
                 // OpenCV data structure to hold an image.
@@ -126,11 +125,12 @@ int32_t main(int32_t argc, char **argv) {
                 }
                 // TODO: Here, you can add some code to check the sampleTimePoint when the current frame was captured.
                 
-                using std::endl;
                 
+                /*
                 cluon::data::TimeStamp tid= cluon::time::now();
                 int64_t na= cluon::time::toMicroseconds(tid);
                 std::cout << "the timeStamps"<< na<< endl;
+                */
                 sharedMemory->unlock();
  
                 // TODO: Do something with the frame.
@@ -278,7 +278,7 @@ int32_t main(int32_t argc, char **argv) {
                 
                 Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
                
-                
+            
                 vector<vector<Point> > contoursB;
                 vector<vector<Point> > contoursY;
 
@@ -318,6 +318,10 @@ int32_t main(int32_t argc, char **argv) {
                     mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
                 }
 
+                
+                
+                
+                
 
                 /*
                 for(int unsigned i=0; i< contoursY.size();i++){
@@ -325,13 +329,14 @@ int32_t main(int32_t argc, char **argv) {
                 }
                 */
 
-                vector <Point2f> pts1;
-                pts1.push_back(Point2f(slider_x_left, slider_y));
-                pts1.push_back (Point2f(slider_x_right, slider_y));
-                pts1.push_back(Point2f(0, 386));
-                pts1.push_back (Point2f(632, 386));
-                
-                Point lineStart = Point(320, 400);
+                double aLength[1000];
+               
+                double bLength;
+                double cLength;
+                double angle;
+                float value; 
+                double inverse;
+                Point lineStart = Point(320, 450);
                 for(int unsigned i =0; i<contoursB.size(); i++){
                     drawContours(drawing, contour_polyB, (int)i, color);
                     rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
@@ -339,9 +344,47 @@ int32_t main(int32_t argc, char **argv) {
                    /* if(i>0) {
                         line(drawing, mcB[i-1], mcB[i], color,5 );
                     } */  
+
                     line(drawing, lineStart, mcB[i], color, 5);
-                
+                    line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
+                    line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
+
+                    bLength = 450 - mcB[i].y;
+                    cLength =  320 - mcB[i].x;
+                    
+
+                   // error handling  if(length==-nan)
+                   // aLength = sqrt(pow(bLength,2) + pow(cLength,2));
+                    
+                    inverse= atan(cLength/bLength);
+                   
+                    //cout<<endl;
+                    //cout<<endl;
+                    
+            
+                    cout<<"the inverse "<<inverse<<endl;
+                    angle=inverse*180/3.1415;
+
+                    cout <<"adjacent is "<<bLength<<"the opposit"<<cLength<<"the angle in degress"<< angle<< "in radian"<< inverse<<endl;
                 }
+                double o=4;
+                double a=7;
+                double g;
+                g= atan(o/a);
+
+               
+                double deg;
+                deg= g*180/3.1415;
+                cout<< "test in degrees "<<deg<< "in radian"<< g<<endl;
+            
+
+                
+
+                
+
+
+                
+
                 
                 /*
                 for(int unsigned i =0; i<contoursY.size(); i++){
@@ -351,8 +394,7 @@ int32_t main(int32_t argc, char **argv) {
                     if(i>0) {
                         line(drawing, mcY[i-1], mcY[i], color,5 );
                     }
-                    line(drawing, lineStart, mcY[i], Scalar(0,255,0), 5);    
-                
+                    line(drawing, lineStart, mcY[i], Scalar(0,255,0), 5);                    
                 }
                 */
 

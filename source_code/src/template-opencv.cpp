@@ -412,6 +412,7 @@ int32_t main(int32_t argc, char **argv) {
                     std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
                 }
                 
+                
                 // Display image on your screen.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);

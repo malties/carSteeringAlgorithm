@@ -37,6 +37,9 @@ int slider_x_left = 92;
 int slider_y = 276;
 int slider_x_right = 508;
 
+std::vector<cv::Point2f> mcB;
+
+
 
 double alpha;
 double beta;
@@ -51,6 +54,7 @@ using namespace cv;
 
 static void on_trackbar( int, void* );
 Mat applyFilter(Mat img, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal);
+static void findCoordinates(std::vector<std::vector<cv::Point> > contours);
 Mat reduceNoise(Mat image);
 Mat applyWarp(Mat image);
 
@@ -224,24 +228,28 @@ int32_t main(int32_t argc, char **argv) {
                
             
                 vector<vector<Point> > contoursB;
-                vector<vector<Point> > contoursY;
+                
 
                 findContours(warpedImgBlue, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); 
+                
                 //findContours(warpedImgYellow, contoursY,RETR_TREE,CHAIN_APPROX_SIMPLE);
 
                 vector<vector<Point> > contour_polyB(contoursB.size() );
-                //vector<vector<Point> > contour_polyY(contoursY.size() );
                 vector<Rect> boundRectB( contoursB.size() );
-                //vector<Rect> boundRectY( contoursY.size() );
                 vector<Moments> muB (contoursB.size());
-               // vector<Moments> muY (contoursY.size());
+
+                findCoordinates(contoursB);
+                 
 
                 //the following is necessary to find the edges of a square that can contain the cones.
+
+                /*
                  for(size_t i=0; i<contoursB.size();i++){
                     muB[i]= moments(contoursB[i], false);
                     approxPolyDP(contoursB[i], contour_polyB[i], 3, true); 
                     boundRectB[i]= boundingRect(contour_polyB[i]);
                  }
+                 */
 
                  //following is code for yellow 
                  /*
@@ -253,11 +261,12 @@ int32_t main(int32_t argc, char **argv) {
                  */
 
                 Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
-                vector<Point2f> mcB (contoursB.size());
+                //vector<Point2f> mcB (contoursB.size());
                 
                 //vector<Point2f> mcY (contoursY.size());
 
                 //The following fills out mcB with cones' coordinates 
+                /*
                 for(int unsigned i=0; i< contoursB.size();i++){
                     mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
                 }
@@ -277,7 +286,7 @@ int32_t main(int32_t argc, char **argv) {
                 Point lineStart = Point(320, 450);
                 for(int unsigned i =0; i<contoursB.size(); i++){
                     drawContours(drawing, contour_polyB, (int)i, color);
-                    rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
+                    //rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
                     circle(drawing,mcB[i],4,color,-1,8,0);
                    /* if(i>0) {
                         line(drawing, mcB[i-1], mcB[i], color,5 );
@@ -340,10 +349,10 @@ int32_t main(int32_t argc, char **argv) {
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     
-                    //cv::imshow("with rect", drawing);
-                    cv::imshow("cones", warpedImgBlue);
-                    cv::imshow("yellow cones", yellowCones);
-                    cv::imshow("blue cones", blueCones);
+                    cv::imshow("with rect", drawing);
+                    //cv::imshow("cones", warpedImgBlue);
+                    //cv::imshow("yellow cones", yellowCones);
+                    //cv::imshow("blue cones", blueCones);
                     //cv::imshow("with g blurr", gBlurredImg);
                     //cv::imshow("with dilation", dilatedImg);
                     //cv::imshow("with dilation and canny", cannyDilateYellow);
@@ -403,5 +412,23 @@ Mat applyWarp(Mat image){
     matrix = getPerspectiveTransform(pts1,pts2);
     warpPerspective(image, warpedImg, matrix, img.size());
     return warpedImg;
+}
+using namespace cv;
+using namespace std;
+
+static void findCoordinates(std::vector<std::vector<cv::Point> > contours){
+    std::vector<std::vector<cv::Point> > contour_polyB(contours.size() );
+    std::vector<Rect> boundRectB( contours.size() );
+    std::vector<Moments> muB (contours.size());
+
+    for(size_t i=0; i<contours.size();i++){
+            muB[i]= moments(contours[i], false);
+            approxPolyDP(contours[i], contour_polyB[i], 3, true); 
+            boundRectB[i]= boundingRect(contour_polyB[i]);
+    }
+    mcB.resize(contours.size());
+    for(size_t i=0; i< contours.size();i++){
+            mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
+     }
 }
 

@@ -33,6 +33,7 @@ RUN apt-get install -y qemu-user-static
 #RUN docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 #RUN docker run --rm -t arm32v6/alpine uname -m
 
+
 RUN mkdir -p ~/.docker/cli-plugins
 RUN cd ~/.docker/cli-plugins
 RUN wget https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64

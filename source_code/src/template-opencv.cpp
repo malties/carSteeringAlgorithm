@@ -98,7 +98,7 @@ int32_t main(int32_t argc, char **argv) {
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
-                std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< "the groundSteering angle is: "<<  gsr.groundSteering()<<std::endl;
+                std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  gsr.groundSteering()<<std::endl;
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
             
@@ -174,9 +174,12 @@ int32_t main(int32_t argc, char **argv) {
 
                 Mat imgCopyBlue = img.clone();
                 Mat imgCopyYellow = img.clone();
+
                 
                 blueCones= applyFilter(imgCopyBlue, 42, 99, 44, 155, 200, 79);
                 yellowCones= applyFilter(imgCopyYellow, yMinHue, yMinSat, yMinVal, yMaxHue, yMaxSat, yMaxVal);
+                double calculateInverse(double bLength, double cLength);
+                double calculateAngle(double inverse);
                
 
                 //Opening and closing are used for getting rid of noise
@@ -322,15 +325,11 @@ int32_t main(int32_t argc, char **argv) {
                 }
                 */
 
-                double aLength[1000];
-               
-                double bLength;
-                double cLength;
-                double angle;
-                float value; 
-                double inverse;
+
+
                 Point lineStart = Point(320, 450);
                 for(int unsigned i =0; i<contoursB.size(); i++){
+
                     drawContours(drawing, contour_polyB, (int)i, color);
                     rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
                     circle(drawing,mcB[i],4,color,-1,8,0);
@@ -338,37 +337,30 @@ int32_t main(int32_t argc, char **argv) {
                         line(drawing, mcB[i-1], mcB[i], color,5 );
                     } */  
 
+                float value; //where is this used?
+                double bLength = 450 - mcB[i].y;
+                double cLength = 320 - mcB[i].x;
+                double radian {calculateInverse(bLength,cLength)};
+                double angle {calculateAngle(radian)};
+
+                    cout<<"the radian "<< radian <<endl;
+                    
+                    cout <<"adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
+
+
                     line(drawing, lineStart, mcB[i], color, 5);
                     line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
                     line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
 
-                    bLength = 450 - mcB[i].y;
-                    cLength =  320 - mcB[i].x;
+
                     
 
                    // error handling  if(length==-nan)
                    // aLength = sqrt(pow(bLength,2) + pow(cLength,2));
                     
-                    inverse= atan(cLength/bLength);
-                   
-                    //cout<<endl;
-                    //cout<<endl;
-                    
-            
-                    cout<<"the inverse "<<inverse<<endl;
-                    angle=inverse*180/3.1415;
 
-                    cout <<"adjacent is "<<bLength<<"the opposit"<<cLength<<"the angle in degress"<< angle<< "in radian"<< inverse<<endl;
                 }
-                double o=4;
-                double a=7;
-                double g;
-                g= atan(o/a);
 
-               
-                double deg;
-                deg= g*180/3.1415;
-                cout<< "test in degrees "<<deg<< "in radian"<< g<<endl;
         
                 
                 /*
@@ -436,5 +428,18 @@ Mat reduceNoise(Mat image){
     cv::morphologyEx(imgOpen, imgClose,cv::MORPH_CLOSE,Kernel); 
 
     return imgClose;
+
 }
+
+double calculateInverse(double bLength, double cLength){
+            double inverse= atan(cLength/bLength);
+            return inverse;
+}
+
+double calculateAngle(double inverse){
+    double angle=(inverse*180)/3.1415;
+    return angle;
+}
+
+
 

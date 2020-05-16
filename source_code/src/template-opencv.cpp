@@ -48,10 +48,11 @@ cv::Mat blueCones;
 cv::Mat yellowCones;
 
 using namespace cv;
+
 static void on_trackbar( int, void* );
 Mat applyFilter(Mat img, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal);
+Mat reduceNoise(Mat image);
 
-Mat hsv;
 cv::Mat img;
 cv::Mat slider_dst;
  
@@ -148,18 +149,19 @@ int32_t main(int32_t argc, char **argv) {
                 //cv::rectangle(img, cv::Point(50, 50), cv::Point(100, 100), cv::Scalar(0,0,255));
  
                 using namespace std;
-                using namespace cv;
-                //cv::Mat hsv;
-                //cv::Mat blueCones;
+                //using namespace cv;
+
+                cv::Mat hsv;
+                cv::Mat blueCones;
+
                 cv::Mat blueConesOpen;
                 cv::Mat blueConesClose;
 
                 //cv:: Mat yellowCones;
                 cv:: Mat yellowConesOpen;
                 cv:: Mat yellowConesClose;
-                
-              
-                cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
+
+                //cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
                 
                 
                 //cvtColor(img,hsv,COLOR_BGR2HSV); 
@@ -168,32 +170,24 @@ int32_t main(int32_t argc, char **argv) {
                
                     
                 //inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
+
+
+                Mat imgCopyBlue = img.clone();
+                Mat imgCopyYellow = img.clone();
                 
-                blueCones= applyFilter(img, bMinHue,bMinSat,bMinVal, bMaxHue,bMaxSat,bMaxVal);
-               // yellowCones= applyFilter()
+                blueCones= applyFilter(imgCopyBlue, 42, 99, 44, 155, 200, 79);
+                yellowCones= applyFilter(imgCopyYellow, yMinHue, yMinSat, yMinVal, yMaxHue, yMaxSat, yMaxVal);
                
 
-                
                 //Opening and closing are used for getting rid of noise
-                cv::morphologyEx(blueCones, blueConesOpen,cv::MORPH_OPEN,Kernel);
-                cv::morphologyEx(blueConesOpen, blueConesClose,cv::MORPH_CLOSE,Kernel); 
+                //cv::morphologyEx(blueCones, blueConesOpen,cv::MORPH_OPEN,Kernel);
+                //cv::morphologyEx(blueConesOpen, blueConesClose,cv::MORPH_CLOSE,Kernel); 
 
-                cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
-                cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
+                //cv::morphologyEx(yellowCones, yellowConesOpen,cv::MORPH_OPEN,Kernel);
+                //cv::morphologyEx(yellowConesOpen, yellowConesClose,cv::MORPH_CLOSE,Kernel);
 
-
-                
-
-               
-
-               //this is the short way
-               cv::Rect myROI(0,200,640,280);
-               //cv::Rect myROI(0,250,640,100);
-               cv::Rect myROITop(0,100,640,200);
-               //cv::rectangle(r, cv::Point(50, 50), cv::Point(200, 200), cv::Scalar(255,0,0)); 
-               //Mat croppedImg= r(myROI);   
-               
-               
+                blueConesClose = reduceNoise(blueCones);
+                yellowConesClose = reduceNoise(yellowCones);
               
 
                //The code below is the code that is currently being used
@@ -234,18 +228,14 @@ int32_t main(int32_t argc, char **argv) {
 
                 Mat warpedImgCombined;
                 //Both the blue and the yellow cones are givven a gaussian blur, dilated, and put through the canny method
-                //Canny detects the edges of a given image
-
-
+                //Canny detects the edges of a given imag
 
                 //might be unnecessary
-                GaussianBlur(blueCones,gBlurredImgBlue,Size(5,5),0);
-                dilate(gBlurredImgBlue, dilatedImgBlue, Mat(), Point(-1, -1), 2, 1, 1); 
-                Canny(dilatedImgBlue, cannyDilateBlue, 127,255,3);
+                
 
-                GaussianBlur(yellowCones,gBlurredImgYellow,Size(5,5),0);
+                /*GaussianBlur(yellowCones,gBlurredImgYellow,Size(5,5),0);
                 dilate(gBlurredImgYellow, dilatedImgYellow, Mat(), Point(-1, -1), 2, 1, 1); 
-                Canny(dilatedImgYellow, cannyDilateYellow, 127,255,3);
+                Canny(dilatedImgYellow, cannyDilateYellow, 127,255,3);*/
 
 
 
@@ -326,12 +316,6 @@ int32_t main(int32_t argc, char **argv) {
                 for(int unsigned i=0; i< contoursB.size();i++){
                     mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
                 }
-
-                
-                
-                
-                
-
                 /*
                 for(int unsigned i=0; i< contoursY.size();i++){
                     mcY[i]= Point2f(muY[i].m10/muY[i].m00, muY[i].m01/muY[i].m00);
@@ -385,15 +369,7 @@ int32_t main(int32_t argc, char **argv) {
                 double deg;
                 deg= g*180/3.1415;
                 cout<< "test in degrees "<<deg<< "in radian"<< g<<endl;
-            
-
-                
-
-                
-                
-
-                
-
+        
                 
                 /*
                 for(int unsigned i =0; i<contoursY.size(); i++){
@@ -420,7 +396,7 @@ int32_t main(int32_t argc, char **argv) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     
                     //cv::imshow("with rect", drawing);
-                    //cv::imshow("cones", warpedImgCombined);
+                    cv::imshow("cones", warpedImgBlue);
                     cv::imshow("blue cones", blueCones);
                     //cv::imshow("with g blurr", gBlurredImg);
                     //cv::imshow("with dilation", dilatedImg);
@@ -445,9 +421,20 @@ static void on_trackbar( int, void* )
    cv::imshow( "Linear Blend", slider_dst);
 }
 Mat applyFilter(Mat image, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal){
+    Mat hsv;
     cvtColor(image,hsv,COLOR_BGR2HSV); 
     inRange(hsv, Scalar(minHue,minSat,minVal),Scalar(maxHue,maxSat,maxVal), filteredCones);
     
     return filteredCones;
+}
+
+Mat reduceNoise(Mat image){
+    Mat imgOpen;
+    Mat imgClose;
+    cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
+    cv::morphologyEx(image, imgOpen,cv::MORPH_OPEN,Kernel);
+    cv::morphologyEx(imgOpen, imgClose,cv::MORPH_CLOSE,Kernel); 
+
+    return imgClose;
 }
 

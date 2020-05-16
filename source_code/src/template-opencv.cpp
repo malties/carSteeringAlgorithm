@@ -30,6 +30,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <cmath>
+#include <vector>
 
 const int alpha_slider_max = 640;
 int slider_x_left = 92;
@@ -51,6 +52,7 @@ using namespace cv;
 static void on_trackbar( int, void* );
 Mat applyFilter(Mat img, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal);
 Mat reduceNoise(Mat image);
+Mat applyWarp(Mat image);
 
 cv::Mat img;
 cv::Mat slider_dst;
@@ -151,25 +153,12 @@ int32_t main(int32_t argc, char **argv) {
                 //using namespace cv;
 
                 cv::Mat hsv;
-                cv::Mat blueCones;
 
                 cv::Mat blueConesOpen;
                 cv::Mat blueConesClose;
 
-                //cv:: Mat yellowCones;
                 cv:: Mat yellowConesOpen;
                 cv:: Mat yellowConesClose;
-
-                //cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
-                
-                
-                //cvtColor(img,hsv,COLOR_BGR2HSV); 
-
-               // inRange(hsv, Scalar(42,99,44),Scalar(155,200,79), blueCones);
-               
-                    
-                //inRange(hsv, Scalar(18,101,104),Scalar(53,255,255), yellowCones);
-
 
                 Mat imgCopyBlue = img.clone();
                 Mat imgCopyYellow = img.clone();
@@ -208,49 +197,34 @@ int32_t main(int32_t argc, char **argv) {
                 on_trackbar( slider_x_right, 0 );
                 //These are the output and input values for the various imaging filtering methods
                 
-                Mat gBlurredImgBlue;
-                Mat dilatedImgBlue;
-                Mat cannyDilateBlue;
                 Mat warpedImgBlue;
-
-                Mat gBlurredImgYellow;
-                Mat dilatedImgYellow;
-                Mat cannyDilateYellow;
                 Mat warpedImgYellow;
-
                 Mat warpedImgCombined;
+
                 //Both the blue and the yellow cones are givven a gaussian blur, dilated, and put through the canny method
                 //Canny detects the edges of a given imag
 
                 //might be unnecessary
-
-
-
                 vector <Point2f> src_1[6000];
                 //These are the points from the original image that will be stretched out in the perspective warp.  
                 //pts1 is the array of points.  
-                vector <Point2f> pts1;
+                /*vector <Point2f> pts1;
                 pts1.push_back(Point2f(slider_x_left, slider_y));  //The x and y coordinates of the top two points can be adjusted with the
                 pts1.push_back (Point2f(slider_x_right, slider_y)); //track bar
                 pts1.push_back(Point2f(0, 386));
-                pts1.push_back (Point2f(632, 386));
+                pts1.push_back (Point2f(632, 386));*/
                 //These are the corners of the new image that the section of the image within the previous points will be sretched into
                 //These points basically determine the width and height of the new image which will be the same as the original image
-                vector <Point2f> pts2;
+                /*vector <Point2f> pts2;
                 pts2.push_back(Point2f(0,0));
                 pts2.push_back(Point2f(WIDTH,0));
                 pts2.push_back(Point2f(0,HEIGHT));
-                pts2.push_back(Point2f(WIDTH,HEIGHT));
+                pts2.push_back(Point2f(WIDTH,HEIGHT));*/
                 //The matrix in the points on the original image that are to be stretched out and the new points thew will be 
                 //stretched out to
-                Mat matrix = getPerspectiveTransform(pts1,pts2);
                 
-                //The warp perspective is what stretches out the selected region of the image
-               // warpPerspective(cannyDilateBlue, warpedImgBlue, matrix, img.size());
-               // warpPerspective(cannyDilateYellow, warpedImgYellow, matrix, img.size());
-
-                warpPerspective(blueConesClose, warpedImgBlue, matrix, img.size());
-                warpPerspective(yellowConesClose, warpedImgYellow, matrix, img.size());
+                warpedImgBlue = applyWarp(blueConesClose);
+                warpedImgYellow = applyWarp(yellowConesClose);
 
                 Mat cannyImage; 
                 warpedImgCombined= warpedImgBlue + warpedImgYellow; 
@@ -310,12 +284,12 @@ int32_t main(int32_t argc, char **argv) {
                 */
 
                 double aLength[1000];
-               
                 double bLength;
                 double cLength;
                 double angle;
                 float value; 
                 double inverse;
+
                 Point lineStart = Point(320, 450);
                 for(int unsigned i =0; i<contoursB.size(); i++){
                     drawContours(drawing, contour_polyB, (int)i, color);
@@ -425,5 +399,25 @@ Mat reduceNoise(Mat image){
     cv::morphologyEx(imgOpen, imgClose,cv::MORPH_CLOSE,Kernel); 
 
     return imgClose;
+}
+
+Mat applyWarp(Mat image){
+    Mat warpedImg;
+    Mat matrix; 
+    std::vector <Point2f> pts1;
+    pts1.push_back(Point2f(slider_x_left, slider_y));  //The x and y coordinates of the top two points can be adjusted with the
+    pts1.push_back (Point2f(slider_x_right, slider_y)); //track bar
+    pts1.push_back(Point2f(0, 386));
+    pts1.push_back (Point2f(632, 386));
+
+    std::vector <Point2f> pts2;
+    pts2.push_back(Point2f(0,0));
+    pts2.push_back(Point2f(640,0));
+    pts2.push_back(Point2f(0,480));
+    pts2.push_back(Point2f(640,480));
+
+    matrix = getPerspectiveTransform(pts1,pts2);
+    warpPerspective(image, warpedImg, matrix, img.size());
+    return warpedImg;
 }
 

@@ -107,7 +107,7 @@ int32_t main(int32_t argc, char **argv) {
             std::int32_t time;
            
             auto onGroundSteeringRequest = [&gsr, &gsrMutex,&time, &grndSteerAngle](cluon::data::Envelope &&env){
-                // The envelope data structure provide further details, such as sampleTimePoint as shown in this test case:
+                // The  envelope data structure provide further details, such as sampleTimePoint as shown in this test case:
                 // https://github.com/chrberger/libcluon/blob/master/libcluon/testsuites/TestEnvelopeConverter.cpp#L31-L40
                 std::lock_guard<std::mutex> lck(gsrMutex);
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));

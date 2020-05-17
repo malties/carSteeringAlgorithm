@@ -60,7 +60,10 @@ double calculateInverse(double bLength, double cLength);
 double calculateAngle(double inverse);
 static void makeTrackbar(Mat image, int WIDTH, int HEIGHT);
 static void on_trackbar( int, void* );
+bool checkSide(Mat image);
+bool conesLeft;
 double grndSteerAngle = 0;
+int coneDecider=0;
 
 cv::Mat img;
 cv::Mat slider_dst;
@@ -192,7 +195,7 @@ int32_t main(int32_t argc, char **argv) {
                 //Both the blue and the yellow cones are givven a gaussian blur, dilated, and put through the canny method
                 //Canny detects the edges of a given imag
 
-                //might be unnecessary
+                
                 vector <Point2f> src_1[6000];
             
                 warpedImgBlue = applyWarp(blueConesClose);
@@ -209,7 +212,12 @@ int32_t main(int32_t argc, char **argv) {
                 vector<vector<Point> > contoursB;
                 findContours(warpedImgBlue, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); 
                 findCoordinates(contoursB);
-    
+                if(coneDecider==0){
+                    checkSide(warpedImgBlue);
+                }
+                
+                cout<<"the cone are placed on the left side which is "<<conesLeft<<endl;
+
                 Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
                 Point lineStart = Point(320, 450);
 
@@ -262,7 +270,7 @@ int32_t main(int32_t argc, char **argv) {
                   //  std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
                     
                 }
-                
+                coneDecider++;
                 
                 // Display image on your screen.
                 if (VERBOSE) {
@@ -385,5 +393,28 @@ static void on_trackbar( int, void* ){
    cv::circle(slider_dst, left,4,color,-1,8,0); 
    cv::circle(slider_dst, right,4,color,-1,8,0); 
    cv::imshow( "Linear Blend", slider_dst);
+}
+bool checkSide(Mat image){
+    
+    int count;
+    int count2;
+    cv::Mat left;
+    cv::Mat right;
+    cv::Rect leftPart(0,0,320,480);
+    cv::Rect rightPart(320,0, 320,480);
+    left=image(leftPart);
+    right=image(rightPart);
+    count= cv::countNonZero(left);
+    count2= cv::countNonZero(right);
+    if(count<count2){
+        //std::cout<<"cone are right"<<std::endl;
+        conesLeft=false;
+    }else{
+        conesLeft=true;
+        //std::cout<<"cones are left"<<std::endl;
+    }
+    
+    return conesLeft;
+
 }
 

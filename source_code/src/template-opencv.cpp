@@ -219,30 +219,30 @@ int32_t main(int32_t argc, char **argv) {
                 for(int unsigned i =0; i<contoursB.size(); i++){
                    // drawContours(drawing, contour_polyB, (int)i, color);
                     //rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
+                    if(mcB[i].y < 450){
                     circle(drawing,mcB[i],4,color,-1,8,0);
-                   /* if(i>0) {
-                        line(drawing, mcB[i-1], mcB[i], color,5 );
-                    } */  
-
-                    double bLength = 450 - mcB[i].y;
-                    double cLength = 320 - mcB[i].x;
+                    double bLength = 450 - mcB[0].y;
+                    double cLength = 320 - mcB[0].x;
                     double radian {calculateInverse(bLength,cLength)};
                     double angle {calculateAngle(radian)};
-
+                    
+                        line(drawing, lineStart, mcB[i], color, 5);
+                        line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
+                        line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
+                     
                     cout<<"the radian "<< radian <<endl;
                     
                     cout <<"adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
 
-                    line(drawing, lineStart, mcB[i], color, 5);
-                    line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
-                    line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
-
                     cout<<"timestampe "<<time<<endl;
                     
-
+                    
+                    }
+                    
                    // error handling  if(length==-nan)
                    // aLength = sqrt(pow(bLength,2) + pow(cLength,2));    
-                }
+                }               
+                
 
                 /*
                 for(int unsigned i =0; i<contoursY.size(); i++){
@@ -352,10 +352,11 @@ static void findCoordinates(std::vector<std::vector<cv::Point> > contours){
             approxPolyDP(contours[i], contour_polyB[i], 3, true); 
             boundRectB[i]= boundingRect(contour_polyB[i]);
     }
+
     mcB.resize(contours.size());
     for(size_t i=0; i< contours.size();i++){
             mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
-     }
+     }     
 }
 
 static void makeTrackbar(Mat image, int WIDTH, int HEIGHT){

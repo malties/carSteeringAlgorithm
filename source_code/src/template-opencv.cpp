@@ -52,13 +52,14 @@ cv::Mat yellowCones;
 
 using namespace cv;
 
-static void on_trackbar( int, void* );
 Mat applyFilter(Mat img, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal);
 static void findCoordinates(std::vector<std::vector<cv::Point> > contours);
 Mat reduceNoise(Mat image);
 Mat applyWarp(Mat image);
 double calculateInverse(double bLength, double cLength);
 double calculateAngle(double inverse);
+static void makeTrackbar(Mat image, int WIDTH, int HEIGHT);
+static void on_trackbar( int, void* );
 
 cv::Mat img;
 cv::Mat slider_dst;
@@ -183,33 +184,13 @@ int32_t main(int32_t argc, char **argv) {
                 yellowConesClose = reduceNoise(yellowCones);
               
 
-               //The code below is the code that is currently being used             
-
-                //The following code between line 171 and 187 is used for making trackbars that adjust the x and y coordinates
-                //for the top two warp points. It's used to make finding the points on the image easier
-                slider_dst = img.clone();
-                namedWindow("Linear Blend", WINDOW_AUTOSIZE);  //This is the window that the track bar will be displayed in
-                char TrackbarName[50];  //Each trackbar has a name
-                char TrackbarName2[50];
-                char TrackbarName3[50];
-    
-                sprintf( TrackbarName, "Point 1 x: %d", WIDTH );  //This sets the length for each trackbar as well as the text beside it
-                sprintf( TrackbarName2, "Point 2 x: %d", WIDTH );
-                sprintf( TrackbarName3, "Point y: %d", HEIGHT );
-                //This creates the trackbar.  Includes its name, the name of the window it will appear in, the starting value of its slider,
-                //the maximum value of its slider, and the method that will be called when it is moved.
-                createTrackbar( TrackbarName, "Linear Blend", &slider_x_left, alpha_slider_max, on_trackbar );
-                createTrackbar( TrackbarName2, "Linear Blend", &slider_x_right, alpha_slider_max, on_trackbar );
-                createTrackbar( TrackbarName3, "Linear Blend", &slider_y, alpha_slider_max, on_trackbar );
-                //these are the methods that are called when the trackbar is moved.
-                on_trackbar( slider_x_left, 0 );
-                on_trackbar( slider_y, 0 );
-                on_trackbar( slider_x_right, 0 );
-                //These are the output and input values for the various imaging filtering methods
-                
+                            
+                makeTrackbar(img, WIDTH, HEIGHT);
                 Mat warpedImgBlue;
                 Mat warpedImgYellow;
                 Mat warpedImgCombined;
+                
+               
 
                 //Both the blue and the yellow cones are givven a gaussian blur, dilated, and put through the canny method
                 //Canny detects the edges of a given imag
@@ -226,30 +207,15 @@ int32_t main(int32_t argc, char **argv) {
 
                 //This combines the warped images for the blue and yellow cones.
                 //warpedImgCombined = warpedImgBlue + warpedImgYellow; 
-
-
-                RNG rng(12345);
-                
-                Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));
-               
-            
+                RNG rng(12345);                
+                Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));            
                 vector<vector<Point> > contoursB;
-                
-
                 findContours(warpedImgBlue, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); 
-                
-                
-
                 findCoordinates(contoursB);
-                 
-
-                
-
+    
                 Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
-                
-
-
                 Point lineStart = Point(320, 450);
+
                 for(int unsigned i =0; i<contoursB.size(); i++){
                    // drawContours(drawing, contour_polyB, (int)i, color);
                     //rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
@@ -258,10 +224,10 @@ int32_t main(int32_t argc, char **argv) {
                         line(drawing, mcB[i-1], mcB[i], color,5 );
                     } */  
 
-                double bLength = 450 - mcB[i].y;
-                double cLength = 320 - mcB[i].x;
-                double radian {calculateInverse(bLength,cLength)};
-                double angle {calculateAngle(radian)};
+                    double bLength = 450 - mcB[i].y;
+                    double cLength = 320 - mcB[i].x;
+                    double radian {calculateInverse(bLength,cLength)};
+                    double angle {calculateAngle(radian)};
 
                     cout<<"the radian "<< radian <<endl;
                     
@@ -275,13 +241,9 @@ int32_t main(int32_t argc, char **argv) {
                     
 
                    // error handling  if(length==-nan)
-                   // aLength = sqrt(pow(bLength,2) + pow(cLength,2));
-                    
-
+                   // aLength = sqrt(pow(bLength,2) + pow(cLength,2));    
                 }
 
-        
-                
                 /*
                 for(int unsigned i =0; i<contoursY.size(); i++){
                     drawContours(drawing, contour_polyY, (int)i, color);
@@ -325,15 +287,6 @@ int32_t main(int32_t argc, char **argv) {
     return retCode;
 }
 
-static void on_trackbar( int, void* )
-{
-   cv::Point left = cv::Point(slider_x_left, slider_y);
-   cv::Point right = cv::Point(slider_x_right, slider_y);
-   cv::Scalar color= cv::Scalar(255,0,0);
-   cv::circle(slider_dst, left,4,color,-1,8,0); 
-   cv::circle(slider_dst, right,4,color,-1,8,0); 
-   cv::imshow( "Linear Blend", slider_dst);
-}
 Mat applyFilter(Mat image, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal){
     Mat hsv;
     Mat filteredCones;
@@ -403,5 +356,35 @@ static void findCoordinates(std::vector<std::vector<cv::Point> > contours){
     for(size_t i=0; i< contours.size();i++){
             mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
      }
+}
+
+static void makeTrackbar(Mat image, int WIDTH, int HEIGHT){
+        slider_dst = image.clone();
+        namedWindow("Linear Blend", WINDOW_AUTOSIZE);  //This is the window that the track bar will be displayed in
+        char TrackbarName[50];  //Each trackbar has a name
+        char TrackbarName2[50];
+        char TrackbarName3[50];
+
+        sprintf( TrackbarName, "Point 1 x: %d", WIDTH );  //This sets the length for each trackbar as well as the text beside it
+        sprintf( TrackbarName2, "Point 2 x: %d", WIDTH );
+        sprintf( TrackbarName3, "Point y: %d", HEIGHT );
+        //This creates the trackbar.  Includes its name, the name of the window it will appear in, the starting value of its slider,
+        //the maximum value of its slider, and the method that will be called when it is moved.
+        createTrackbar( TrackbarName, "Linear Blend", &slider_x_left, alpha_slider_max, on_trackbar );
+        createTrackbar( TrackbarName2, "Linear Blend", &slider_x_right, alpha_slider_max, on_trackbar );
+        createTrackbar( TrackbarName3, "Linear Blend", &slider_y, alpha_slider_max, on_trackbar );
+        //these are the methods that are called when the trackbar is moved.
+        on_trackbar( slider_x_left, 0 );
+        on_trackbar( slider_y, 0 );
+        on_trackbar( slider_x_right, 0 );
+}
+
+static void on_trackbar( int, void* ){
+   cv::Point left = cv::Point(slider_x_left, slider_y);
+   cv::Point right = cv::Point(slider_x_right, slider_y);
+   cv::Scalar color= cv::Scalar(255,0,0);
+   cv::circle(slider_dst, left,4,color,-1,8,0); 
+   cv::circle(slider_dst, right,4,color,-1,8,0); 
+   cv::imshow( "Linear Blend", slider_dst);
 }
 

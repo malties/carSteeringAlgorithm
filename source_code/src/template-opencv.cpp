@@ -60,6 +60,7 @@ double calculateInverse(double bLength, double cLength);
 double calculateAngle(double inverse);
 static void makeTrackbar(Mat image, int WIDTH, int HEIGHT);
 static void on_trackbar( int, void* );
+double grndSteerAngle = 0;
 
 cv::Mat img;
 cv::Mat slider_dst;
@@ -101,14 +102,14 @@ int32_t main(int32_t argc, char **argv) {
             std::mutex gsrMutex;
             std::int32_t time;
            
-            auto onGroundSteeringRequest = [&gsr, &gsrMutex,&time](cluon::data::Envelope &&env){
+            auto onGroundSteeringRequest = [&gsr, &gsrMutex,&time, &grndSteerAngle](cluon::data::Envelope &&env){
                 // The envelope data structure provide further details, such as sampleTimePoint as shown in this test case:
                 // https://github.com/chrberger/libcluon/blob/master/libcluon/testsuites/TestEnvelopeConverter.cpp#L31-L40
                 std::lock_guard<std::mutex> lck(gsrMutex);
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
-                std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< "the groundSteering angle is: "<<  gsr.groundSteering()<<std::endl;
+                std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<std::endl; 
                 time= env.sampleTimeStamp().seconds();
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
@@ -123,7 +124,7 @@ int32_t main(int32_t argc, char **argv) {
                 dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
                 //std::cout << "distance from the file = " << dr.distance() << std::endl;
                 dis= (dr.distance()/2)/29.1;
-                std::cout << "actual distance = " << dis << " at this timeStamp: "<< env.sampleTimeStamp().seconds()<< std::endl;
+                //std::cout << "actual distance = " << dis << " at this timeStamp: "<< env.sampleTimeStamp().seconds()<< std::endl;
 
             };
 
@@ -182,15 +183,11 @@ int32_t main(int32_t argc, char **argv) {
 
                 blueConesClose = reduceNoise(blueCones);
                 yellowConesClose = reduceNoise(yellowCones);
-              
-
                             
                 makeTrackbar(img, WIDTH, HEIGHT);
                 Mat warpedImgBlue;
                 Mat warpedImgYellow;
-                Mat warpedImgCombined;
-                
-               
+                Mat warpedImgCombined;               
 
                 //Both the blue and the yellow cones are givven a gaussian blur, dilated, and put through the canny method
                 //Canny detects the edges of a given imag
@@ -220,23 +217,24 @@ int32_t main(int32_t argc, char **argv) {
                    // drawContours(drawing, contour_polyB, (int)i, color);
                     //rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
                     if(mcB[i].y < 450){
-                    circle(drawing,mcB[i],4,color,-1,8,0);
-                    double bLength = 450 - mcB[0].y;
-                    double cLength = 320 - mcB[0].x;
-                    double radian {calculateInverse(bLength,cLength)};
-                    double angle {calculateAngle(radian)};
-                    
-                        line(drawing, lineStart, mcB[i], color, 5);
-                        line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
-                        line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
-                     
-                    cout<<"the radian "<< radian <<endl;
-                    
-                    cout <<"adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
-
-                    cout<<"timestampe "<<time<<endl;
-                    
-                    
+                        circle(drawing,mcB[i],4,color,-1,8,0);
+                        double bLength = 450 - mcB[i].y;
+                        double cLength = 320 - mcB[i].x;
+                        double radian {calculateInverse(bLength,cLength)};
+                        double angle {calculateAngle(radian)};
+                        
+                        if (angle > -17 && angle < 17){
+                            grndSteerAngle = radian;
+                        }else {
+                            grndSteerAngle = 0;
+                        }
+                            line(drawing, lineStart, mcB[i], color, 5);
+                            line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
+                            line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
+                        
+                        //cout<<"the radian "<< radian <<endl;                        
+                        //cout <<"the radian: " << groundStrAngle <<" adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
+                        //cout <<"the radian: " << groundStrAngle <<" timestampe "<<time<<endl;
                     }
                     
                    // error handling  if(length==-nan)

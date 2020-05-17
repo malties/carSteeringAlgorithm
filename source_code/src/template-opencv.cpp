@@ -112,7 +112,7 @@ int32_t main(int32_t argc, char **argv) {
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
-                std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<std::endl; 
+                //std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<std::endl; 
                 time= env.sampleTimeStamp().seconds();
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
@@ -212,22 +212,32 @@ int32_t main(int32_t argc, char **argv) {
                 vector<vector<Point> > contoursB;
                 findContours(warpedImgBlue, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); 
                 findCoordinates(contoursB);
+                Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
+                Point lineStart = Point(320, 450);
+                
+                
                 if(coneDecider==0){
                     checkSide(warpedImgBlue);
                 }
                 
                 cout<<"the cone are placed on the left side which is "<<conesLeft<<endl;
+               
 
-                Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
-                Point lineStart = Point(320, 450);
+                
 
                 for(int unsigned i =0; i<contoursB.size(); i++){
                    // drawContours(drawing, contour_polyB, (int)i, color);
                     //rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
                     if(mcB[i].y < 450){
+                        double cLength;
                         circle(drawing,mcB[i],4,color,-1,8,0);
+                         if(conesLeft==1){
+                              cLength = 320 - mcB[i].x;
+
+                            }else{
+                                cLength=mcB[i].x-320;
+                            }
                         double bLength = 450 - mcB[i].y;
-                        double cLength = 320 - mcB[i].x;
                         double radian {calculateInverse(bLength,cLength)};
                         double angle {calculateAngle(radian)};
                         
@@ -241,7 +251,7 @@ int32_t main(int32_t argc, char **argv) {
                             line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
                         
                         //cout<<"the radian "<< radian <<endl;                        
-                        //cout <<"the radian: " << groundStrAngle <<" adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
+                        cout <<"the radian: " << grndSteerAngle <<" adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
                         //cout <<"the radian: " << groundStrAngle <<" timestampe "<<time<<endl;
                     }
                     

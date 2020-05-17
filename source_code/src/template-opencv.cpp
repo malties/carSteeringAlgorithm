@@ -37,7 +37,7 @@ int slider_x_left = 92;
 int slider_y = 276;
 int slider_x_right = 508;
 
-std::vector<cv::Point2f> mcB;
+//std::vector<cv::Point2f> mcB;
 
 
 
@@ -53,7 +53,7 @@ cv::Mat yellowCones;
 using namespace cv;
 
 Mat applyFilter(Mat img, int minHue, int minSat, int minVal, int maxHue, int maxSat, int maxVal);
-static void findCoordinates(std::vector<std::vector<cv::Point> > contours);
+std::vector<cv::Point2f>  findCoordinates(std::vector<std::vector<cv::Point> > contours);
 Mat reduceNoise(Mat image);
 Mat applyWarp(Mat image);
 double calculateInverse(double bLength, double cLength);
@@ -64,6 +64,7 @@ bool checkSide(Mat image);
 bool conesLeft;
 double grndSteerAngle = 0;
 int coneDecider=0;
+int ind = 0;
 
 cv::Mat img;
 cv::Mat slider_dst;
@@ -112,7 +113,7 @@ int32_t main(int32_t argc, char **argv) {
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
-                //std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<std::endl; 
+                std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl; 
                 time= env.sampleTimeStamp().seconds();
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
@@ -211,7 +212,8 @@ int32_t main(int32_t argc, char **argv) {
                 Scalar color= Scalar(rng.uniform(0,225), rng.uniform(0,255), rng.uniform(0,255));            
                 vector<vector<Point> > contoursB;
                 findContours(warpedImgBlue, contoursB,RETR_TREE,CHAIN_APPROX_SIMPLE); 
-                findCoordinates(contoursB);
+                std::vector<cv::Point2f> mcB = findCoordinates(contoursB);
+
                 Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
                 Point lineStart = Point(320, 450);
                 
@@ -222,8 +224,6 @@ int32_t main(int32_t argc, char **argv) {
                 
                 cout<<"the cone are placed on the left side which is "<<conesLeft<<endl;
                
-
-                
 
                 for(int unsigned i =0; i<contoursB.size(); i++){
                    // drawContours(drawing, contour_polyB, (int)i, color);
@@ -251,15 +251,14 @@ int32_t main(int32_t argc, char **argv) {
                             line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
                         
                         //cout<<"the radian "<< radian <<endl;                        
-                        cout <<"the radian: " << grndSteerAngle <<" adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
+                       // cout <<"the radian: " << grndSteerAngle <<" adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
                         //cout <<"the radian: " << groundStrAngle <<" timestampe "<<time<<endl;
                     }
                     
                    // error handling  if(length==-nan)
                    // aLength = sqrt(pow(bLength,2) + pow(cLength,2));    
-                }               
-                
-
+                }   
+            
                 /*
                 for(int unsigned i =0; i<contoursY.size(); i++){
                     drawContours(drawing, contour_polyY, (int)i, color);
@@ -358,10 +357,11 @@ Mat applyWarp(Mat image){
 using namespace cv;
 using namespace std;
 
-static void findCoordinates(std::vector<std::vector<cv::Point> > contours){
+std::vector<cv::Point2f> findCoordinates(std::vector<std::vector<cv::Point> > contours){
     std::vector<std::vector<cv::Point> > contour_polyB(contours.size() );
     std::vector<Rect> boundRectB( contours.size() );
     std::vector<Moments> muB (contours.size());
+    std::vector<cv::Point2f> mc (contours.size());
 
     for(size_t i=0; i<contours.size();i++){
             muB[i]= moments(contours[i], false);
@@ -369,10 +369,12 @@ static void findCoordinates(std::vector<std::vector<cv::Point> > contours){
             boundRectB[i]= boundingRect(contour_polyB[i]);
     }
 
-    mcB.resize(contours.size());
+    //mcB.resize(contours.size());
     for(size_t i=0; i< contours.size();i++){
-            mcB[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
-     }     
+            mc[i]= Point2f(muB[i].m10/muB[i].m00, muB[i].m01/muB[i].m00);
+     }
+
+     return mc;     
 }
 
 static void makeTrackbar(Mat image, int WIDTH, int HEIGHT){

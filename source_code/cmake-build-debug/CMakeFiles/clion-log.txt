@@ -1,0 +1,22 @@
+/opt/clion-2019.3.2/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" "/home/hannah/Documents/School Projects/CPS & SOS/group_06/source_code"
+-- Found librt: /usr/include, /usr/lib/x86_64-linux-gnu/librt.a Using static library.
+CMake Error at CMakeLists.txt:91 (find_package):
+  By not providing "FindOpenCV.cmake" in CMAKE_MODULE_PATH this project has
+  asked CMake to find a package configuration file provided by "OpenCV", but
+  CMake did not find one.
+
+  Could not find a package configuration file provided by "OpenCV" with any
+  of the following names:
+
+    OpenCVConfig.cmake
+    opencv-config.cmake
+
+  Add the installation prefix of "OpenCV" to CMAKE_PREFIX_PATH or set
+  "OpenCV_DIR" to a directory containing one of the above files.  If "OpenCV"
+  provides a separate development package or SDK, be sure it has been
+  installed.
+
+
+-- Configuring incomplete, errors occurred!
+See also "/home/hannah/Documents/School Projects/CPS & SOS/group_06/source_code/cmake-build-debug/CMakeFiles/CMakeOutput.log".
+See also "/home/hannah/Documents/School Projects/CPS & SOS/group_06/source_code/cmake-build-debug/CMakeFiles/CMakeError.log".

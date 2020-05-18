@@ -34,7 +34,7 @@
 
 const int alpha_slider_max = 640;
 int slider_x_left = 92;
-int slider_y = 276;
+int slider_y = 219;
 int slider_x_right = 508;
 
 //std::vector<cv::Point2f> mcB;
@@ -65,10 +65,11 @@ bool conesLeft;
 double grndSteerAngle = 0;
 int coneDecider=0;
 int ind = 0;
-
+double dis;
 cv::Mat img;
 cv::Mat slider_dst;
- 
+
+
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{1};
     // Parse the command line parameters as we require the user to specify some mandatory information on startup.
@@ -118,7 +119,7 @@ int32_t main(int32_t argc, char **argv) {
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
             
-            double dis; 
+            dis; 
             opendlv::proxy::DistanceReading dr;
             std::mutex drMutex;
 
@@ -222,7 +223,7 @@ int32_t main(int32_t argc, char **argv) {
                     checkSide(warpedImgBlue);
                 }
                 
-                cout<<"the cone are placed on the left side which is "<<conesLeft<<endl;
+                //cout<<"the cone are placed on the left side which is "<<conesLeft<<endl;
                
 
                 for(int unsigned i =0; i<contoursB.size(); i++){
@@ -240,25 +241,33 @@ int32_t main(int32_t argc, char **argv) {
                         double bLength = 450 - mcB[i].y;
                         double radian {calculateInverse(bLength,cLength)};
                         double angle {calculateAngle(radian)};
-                        
-                        if (angle > -17 && angle < 17){
-                            grndSteerAngle = radian;
-                        }else {
+                        if(dis > 0.04){
                             grndSteerAngle = 0;
                         }
+                        else if (angle > -25 && angle < 25){
+                            grndSteerAngle = radian;
+                        }/*else {
+                            grndSteerAngle = 0;
+                        }*/
                             line(drawing, lineStart, mcB[i], color, 5);
                             line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
                             line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
                         
-                        //cout<<"the radian "<< radian <<endl;                        
+                        //cout<<"the radian "<< radian <<endl;   
+                                             
                        // cout <<"the radian: " << grndSteerAngle <<" adjacent is "<<bLength<<" the opposite "<<cLength<<" the angle in degress "<< angle <<endl;
                         //cout <<"the radian: " << groundStrAngle <<" timestampe "<<time<<endl;
+                         //std::cout << "the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
+                         //std::cout << "the groundSteering angle is: "<<  grndSteerAngle <<std::endl;
                     }
-                    
+                   //std::cout << "the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
                    // error handling  if(length==-nan)
                    // aLength = sqrt(pow(bLength,2) + pow(cLength,2));    
-                }   
+                } 
             
+                    //std::cout << "the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
+                   // error handling  if(length==-nan)
+                   // aLength = sqrt(pow(bLength,2) + pow(cLength,2));    
                 /*
                 for(int unsigned i =0; i<contoursY.size(); i++){
                     drawContours(drawing, contour_polyY, (int)i, color);

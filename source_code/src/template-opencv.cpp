@@ -34,7 +34,7 @@
 
 const int alpha_slider_max = 640;
 int slider_x_left = 92;
-int slider_y = 219;
+int slider_y = 259;
 int slider_x_right = 508;
 
 //std::vector<cv::Point2f> mcB;
@@ -114,7 +114,8 @@ int32_t main(int32_t argc, char **argv) {
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
-                std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl; 
+                //std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
+                std::cout<< env.sampleTimeStamp().seconds()<< " "<<  grndSteerAngle <<std::endl;
                 time= env.sampleTimeStamp().seconds();
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
@@ -216,6 +217,7 @@ int32_t main(int32_t argc, char **argv) {
                 std::vector<cv::Point2f> mcB = findCoordinates(contoursB);
 
                 Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
+                //Mat drawing = warpedImgCombined.clone();
                 Point lineStart = Point(320, 450);
                 
                 
@@ -225,33 +227,44 @@ int32_t main(int32_t argc, char **argv) {
                 
                 //cout<<"the cone are placed on the left side which is "<<conesLeft<<endl;
                
-
-                for(int unsigned i =0; i<contoursB.size(); i++){
+               unsigned int len = 0;
+            
                    // drawContours(drawing, contour_polyB, (int)i, color);
                     //rectangle(drawing,boundRectB[i].tl(), boundRectB[i].br(), color,2);
-                    if(mcB[i].y < 450){
+                    if(contoursB.size()>0){
+                        len = contoursB.size()-1;   
+                     if(mcB[len].y < 450){
+                        len = contoursB.size()-1;
                         double cLength;
-                        circle(drawing,mcB[i],4,color,-1,8,0);
+                        circle(warpedImgBlue,mcB[len],4,color,-1,8,0);
                          if(conesLeft==1){
-                              cLength = 320 - mcB[i].x;
+                              cLength = 320 - mcB[len].x;
 
                             }else{
-                                cLength=mcB[i].x-320;
+                                cLength=mcB[len].x-320;
                             }
-                        double bLength = 450 - mcB[i].y;
+                        double bLength = 450 - mcB[len].y;
                         double radian {calculateInverse(bLength,cLength)};
                         double angle {calculateAngle(radian)};
-                        if(dis > 0.04){
+                        if(dis > 0.03){
                             grndSteerAngle = 0;
                         }
-                        else if (angle > -25 && angle < 25){
+                        else if(angle > -25 && angle <25){
                             grndSteerAngle = radian;
-                        }/*else {
+                            /*if(radian > 0.3){
+                                grndSteerAngle = radian - 0.4;
+                            }else if(radian < -0.3){
+                                grndSteerAngle = grndSteerAngle + 0.4;
+                            }else {
+                                grndSteerAngle = radian;
+                              } */  
+                        }
+                        /*else {
                             grndSteerAngle = 0;
                         }*/
-                            line(drawing, lineStart, mcB[i], color, 5);
-                            line(drawing, lineStart, Point(320, mcB[i].y), Scalar(0,255,0), 5);
-                            line(drawing, mcB[i], Point(320, mcB[i].y), Scalar(0,0,255), 5);
+                            line(warpedImgBlue, lineStart, mcB[len], color, 5);
+                            line(warpedImgBlue, lineStart, Point(320, mcB[len].y), Scalar(0,255,0), 5);
+                            line(warpedImgBlue, mcB[len], Point(320, mcB[len].y), Scalar(0,0,255), 5);
                         
                         //cout<<"the radian "<< radian <<endl;   
                                              
@@ -260,10 +273,12 @@ int32_t main(int32_t argc, char **argv) {
                          //std::cout << "the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
                          //std::cout << "the groundSteering angle is: "<<  grndSteerAngle <<std::endl;
                     }
+
+                   }
                    //std::cout << "the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
                    // error handling  if(length==-nan)
                    // aLength = sqrt(pow(bLength,2) + pow(cLength,2));    
-                } 
+             
             
                     //std::cout << "the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
                    // error handling  if(length==-nan)
@@ -294,8 +309,8 @@ int32_t main(int32_t argc, char **argv) {
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     
-                    cv::imshow("with rect", drawing);
-                    //cv::imshow("cones", warpedImgBlue);
+                    //cv::imshow("with rect", drawing);
+                    cv::imshow("cones", warpedImgBlue);
                     //cv::imshow("yellow cones", yellowCones);
                     //cv::imshow("blue cones", blueCones);
                     //cv::imshow("with g blurr", gBlurredImg);
@@ -323,11 +338,21 @@ Mat applyFilter(Mat image, int minHue, int minSat, int minVal, int maxHue, int m
 Mat reduceNoise(Mat image){
     Mat imgOpen;
     Mat imgClose;
-    cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
-    cv::morphologyEx(image, imgOpen,cv::MORPH_OPEN,Kernel);
-    cv::morphologyEx(imgOpen, imgClose,cv::MORPH_CLOSE,Kernel); 
+    Mat gBlurredImg;
+    Mat dilatedImg;
+    Mat cannyImg;
 
-    return imgClose;
+    //cv::Mat Kernel = cv::Mat(cv::Size(5,5),CV_8UC1,cv::Scalar(255));
+    //cv::morphologyEx(image, imgOpen,cv::MORPH_OPEN,Kernel);
+    //cv::morphologyEx(imgOpen, imgClose,cv::MORPH_CLOSE,Kernel); 
+    
+    GaussianBlur(image,gBlurredImg,Size(5,5),0);
+    dilate(gBlurredImg, dilatedImg, Mat(), Point(-1, -1), 2, 1, 1); 
+    Canny(gBlurredImg, cannyImg, 127,255,3);
+
+
+
+    return cannyImg;
 
 }
 

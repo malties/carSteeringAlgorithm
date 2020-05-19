@@ -246,10 +246,8 @@ int32_t main(int32_t argc, char **argv) {
                         if(dis > 0.03){
                             grndSteerAngle = 0;
                         }else{ 
-                            if(midpointRadian2< 0.3 && midpointRadian2 > -0.3){
-                                grndSteerAngle = midpointRadian2;
-                            }
-                                
+                            grndSteerAngle = midpointRadian2;
+                    
                         }
                         line(drawing, lineStart, midpoint, color, 5);
                         line(drawing, lineStart, Point(320, midpoint.y), Scalar(0,255,0), 5);
@@ -271,10 +269,11 @@ int32_t main(int32_t argc, char **argv) {
                         double angle {calculateAngle(radian)};
                         double radian2 = radian - (radian/2);
 
-                        if(radian2< 0.3 && radian2 > -0.3){
+                        if(dis >0.03){
+                            grndSteerAngle = 0;
+                        }else{
                             grndSteerAngle = radian - (radian/ 2);
-                            }
-                                              
+                        }                     
                             line(drawing, lineStart, mcB[len], color, 5);
                             line(drawing, lineStart, Point(320, mcB[len].y), Scalar(0,255,0), 5);
                             line(drawing, mcB[len], Point(320, mcB[len].y), Scalar(0,0,255), 5);

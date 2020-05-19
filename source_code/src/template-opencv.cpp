@@ -241,11 +241,11 @@ int32_t main(int32_t argc, char **argv) {
                         double oppLength = 320 - midpoint.x;
                         double adLength = 450 - midpoint.y;
 
-                        double midpointRadian = calculateInverse(oppLength, adLength);
+                        double midpointRadian = calculateInverse(adLength, oppLength);
                         if(dis > 1.5){
                             grndSteerAngle = 0;
                         }else{
-                            
+
                             grndSteerAngle = midpointRadian;
                         }
                         line(warpedImgCombined, lineStart, midpoint, color, 5);

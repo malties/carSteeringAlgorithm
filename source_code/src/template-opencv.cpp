@@ -115,7 +115,7 @@ int32_t main(int32_t argc, char **argv) {
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
                 //std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
-                std::cout<< env.sampleTimeStamp().seconds()<< " "<<  grndSteerAngle <<std::endl;
+                std::cout<< env.sampleTimeStamp().seconds()<< " "<<  grndSteerAngle <<"; "<< gsr.groundSteering()<<std::endl;
                 time= env.sampleTimeStamp().seconds();
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
@@ -250,7 +250,12 @@ int32_t main(int32_t argc, char **argv) {
                             grndSteerAngle = 0;
                         }
                         else if(angle > -25 && angle <25){
-                            grndSteerAngle = radian;
+                            if(grndSteerAngle < 0 && grndSteerAngle !=0){
+                                grndSteerAngle = radian * -1;
+                            }else{
+                                grndSteerAngle = radian;
+                            } 
+                            
                             /*if(radian > 0.3){
                                 grndSteerAngle = radian - 0.4;
                             }else if(radian < -0.3){

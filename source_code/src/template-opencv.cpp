@@ -115,7 +115,7 @@ int32_t main(int32_t argc, char **argv) {
                 
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
                 //std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
-                std::cout<< env.sampleTimeStamp().seconds()<< " "<<  grndSteerAngle <<"; "<< gsr.groundSteering()<<std::endl;
+                //std::cout<< env.sampleTimeStamp().seconds()<< " "<<  grndSteerAngle <<"; "<< gsr.groundSteering()<<std::endl;
                 time= env.sampleTimeStamp().seconds();
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
@@ -129,8 +129,8 @@ int32_t main(int32_t argc, char **argv) {
                 
                 dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
                 //std::cout << "distance from the file = " << dr.distance() << std::endl;
-                //dis= (dr.distance()/2)/29.1; 
-                dis = dr.distance();
+                dis= (dr.distance()/2)/29.1; 
+                //dis = dr.distance();
                 //std::cout << "actual distance = " << dis << " at this timeStamp: "<< env.sampleTimeStamp().seconds()<< std::endl;
 
             };
@@ -223,7 +223,7 @@ int32_t main(int32_t argc, char **argv) {
 
                 Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
                 //Mat drawing = warpedImgCombined.clone();
-                Point lineStart = Point(320, 450);
+                Point lineStart = Point(320, 350);
                 
                 unsigned int len = 0;
                 
@@ -232,7 +232,7 @@ int32_t main(int32_t argc, char **argv) {
                 }
 
                 if(contoursB.size()>0 && contoursY.size() > 0){ 
-                    if(mcB[0].y<450 && mcY[0].y<450) {   
+                    if(mcB[0].y<350 && mcY[0].y<350) {   
                         double midpointX = (mcB[0].x + mcY[0].x)/2;
                         double midpointY = (mcB[0].y + mcY[0].y)/2;
 
@@ -242,11 +242,10 @@ int32_t main(int32_t argc, char **argv) {
                         double adLength = 450 - midpoint.y;
 
                         double midpointRadian = calculateInverse(adLength, oppLength);
-                        if(dis > 1.5){
+                        if(dis > 0.03){
                             grndSteerAngle = 0;
-                        }else{
-
-                            grndSteerAngle = midpointRadian;
+                        }else{ 
+                                grndSteerAngle = midpointRadian - (midpointRadian / 2);
                         }
                         line(warpedImgCombined, lineStart, midpoint, color, 5);
                         line(warpedImgCombined, lineStart, Point(320, midpoint.y), Scalar(0,255,0), 5);
@@ -254,21 +253,19 @@ int32_t main(int32_t argc, char **argv) {
                     }
                } else if(contoursB.size()>0){
                         len = 0;   
-                     if(mcB[len].y < 450){
+                     if(mcB[len].y < 350){
                         len = contoursB.size()-1;
                         double cLength;
                         //circle(warpedImgCombined,mcB[len],4,color,-1,8,0);
                          if(conesLeft==1){
                               cLength = 320 - mcB[len].x;
-
                             }else{
                                 cLength=mcB[len].x-320;
                             }
                         double bLength = 450 - mcB[len].y;
                         double radian {calculateInverse(bLength,cLength)};
                         double angle {calculateAngle(radian)};
-                        
-                        grndSteerAngle = radian;
+                        grndSteerAngle = radian - (radian/2); 
                                               
                             line(warpedImgCombined, lineStart, mcB[len], color, 5);
                             line(warpedImgCombined, lineStart, Point(320, mcB[len].y), Scalar(0,255,0), 5);
@@ -281,7 +278,7 @@ int32_t main(int32_t argc, char **argv) {
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
 
-                  //  std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
+                std::cout <<time<<"; "<<grndSteerAngle<< "; " << gsr.groundSteering() << std::endl;
                     
                 }
                 coneDecider++;

@@ -207,7 +207,7 @@ int32_t main(int32_t argc, char **argv) {
 
                 Mat cannyImage; 
                 warpedImgCombined= warpedImgBlue + warpedImgYellow; 
-                Canny(warpedImgCombined, cannyImage, 127,255,3);
+                //Canny(warpedImgCombined, cannyImage, 127,255,3);
 
                 //This combines the warped images for the blue and yellow cones.
                 //warpedImgCombined = warpedImgBlue + warpedImgYellow; 
@@ -221,8 +221,8 @@ int32_t main(int32_t argc, char **argv) {
                 std::vector<cv::Point2f> mcB = findCoordinates(contoursB);
                 std::vector<cv::Point2f> mcY = findCoordinates(contoursY);
 
-                Mat drawing= Mat::zeros(cannyImage.size(), CV_8UC3);
-                //Mat drawing = warpedImgCombined.clone();
+                //Mat drawing= Mat::zeros(warpedImgCombined.size(), CV_8UC3);
+                Mat drawing = warpedImgCombined.clone();
                 Point lineStart = Point(320, 350);
                 
                 unsigned int len = 0;
@@ -242,14 +242,18 @@ int32_t main(int32_t argc, char **argv) {
                         double adLength = 450 - midpoint.y;
 
                         double midpointRadian = calculateInverse(adLength, oppLength);
+                        double midpointRadian2 = midpointRadian -(midpointRadian/2);
                         if(dis > 0.03){
                             grndSteerAngle = 0;
                         }else{ 
-                                grndSteerAngle = midpointRadian - (midpointRadian / 2);
+                            if(midpointRadian2< 0.3 && midpointRadian2 > -0.3){
+                                grndSteerAngle = midpointRadian2;
+                            }
+                                
                         }
-                        line(warpedImgCombined, lineStart, midpoint, color, 5);
-                        line(warpedImgCombined, lineStart, Point(320, midpoint.y), Scalar(0,255,0), 5);
-                        line(warpedImgCombined, midpoint, Point(320, midpoint.y), Scalar(0,0,255), 5);
+                        line(drawing, lineStart, midpoint, color, 5);
+                        line(drawing, lineStart, Point(320, midpoint.y), Scalar(0,255,0), 5);
+                        line(drawing, midpoint, Point(320, midpoint.y), Scalar(0,0,255), 5);
                     }
                } else if(contoursB.size()>0){
                         len = 0;   
@@ -265,13 +269,19 @@ int32_t main(int32_t argc, char **argv) {
                         double bLength = 450 - mcB[len].y;
                         double radian {calculateInverse(bLength,cLength)};
                         double angle {calculateAngle(radian)};
-                        grndSteerAngle = radian - (radian/2); 
+                        double radian2 = radian - (radian/2);
+
+                        if(radian2< 0.3 && radian2 > -0.3){
+                            grndSteerAngle = radian - (radian/ 2);
+                            }
                                               
-                            line(warpedImgCombined, lineStart, mcB[len], color, 5);
-                            line(warpedImgCombined, lineStart, Point(320, mcB[len].y), Scalar(0,255,0), 5);
-                            line(warpedImgCombined, mcB[len], Point(320, mcB[len].y), Scalar(0,0,255), 5);
+                            line(drawing, lineStart, mcB[len], color, 5);
+                            line(drawing, lineStart, Point(320, mcB[len].y), Scalar(0,255,0), 5);
+                            line(drawing, mcB[len], Point(320, mcB[len].y), Scalar(0,0,255), 5);
                        }
                    }
+
+                   Mat drawing2 = drawing + warpedImgCombined;
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
 
@@ -288,7 +298,7 @@ int32_t main(int32_t argc, char **argv) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     
                     //cv::imshow("with rect", drawing);
-                    cv::imshow("cones", warpedImgCombined);
+                    cv::imshow("cones", drawing);
                     //cv::imshow("yellow cones", yellowCones);
                     //cv::imshow("blue cones", blueCones);
                     //cv::imshow("with g blurr", gBlurredImg);

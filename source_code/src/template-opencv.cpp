@@ -261,7 +261,7 @@ int32_t main(int32_t argc, char **argv) {
                         len = contoursB.size()-1;
                         double cLength;
                         //circle(warpedImgCombined,mcB[len],4,color,-1,8,0);
-                         if(conesLeft==1){
+                         if(conesLeft){
                               cLength = 320 - mcB[len].x;
                             }else{
                                 cLength=mcB[len].x-320;

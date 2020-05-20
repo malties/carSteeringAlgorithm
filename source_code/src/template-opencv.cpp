@@ -243,11 +243,16 @@ int32_t main(int32_t argc, char **argv) {
 
                         double midpointRadian = calculateInverse(adLength, oppLength);
                         double midpointRadian2 = midpointRadian -(midpointRadian/2);
-                        if(dis > 0.03){
+
+                        if(dis > 0.04){
                             grndSteerAngle = 0;
                         }else{ 
-                            grndSteerAngle = midpointRadian2;
-                    
+                            if(midpointRadian2 > 0.4 || midpointRadian2 <-0.4){
+                                grndSteerAngle = midpointRadian2 - (midpointRadian2/1.25);
+                            }
+                            else{
+                                grndSteerAngle = midpointRadian2; 
+                            }                  
                         }
                         line(drawing, lineStart, midpoint, color, 5);
                         line(drawing, lineStart, Point(320, midpoint.y), Scalar(0,255,0), 5);
@@ -269,10 +274,16 @@ int32_t main(int32_t argc, char **argv) {
                         double angle {calculateAngle(radian)};
                         double radian2 = radian - (radian/2);
 
-                        if(dis >0.03){
+                        if(dis >0.04){
                             grndSteerAngle = 0;
                         }else{
-                            grndSteerAngle = radian - (radian/ 2);
+                            if(radian2 > 0.4 || radian2 <-0.4){
+                                grndSteerAngle = radian2 - (radian2/1.25);
+                            }
+                            else{
+                                grndSteerAngle = radian - (radian/ 2);
+                            }
+                            
                         }                     
                             line(drawing, lineStart, mcB[len], color, 5);
                             line(drawing, lineStart, Point(320, mcB[len].y), Scalar(0,255,0), 5);
@@ -280,13 +291,17 @@ int32_t main(int32_t argc, char **argv) {
                        }
                    }
 
-                   Mat drawing2 = drawing + warpedImgCombined;
+                 
+                
+                Mat drawing2 = drawing + warpedImgCombined;
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
 
                 {
-                    std::lock_guard<std::mutex> lck(gsrMutex);
-
+                    
+                std::lock_guard<std::mutex> lck(gsrMutex);
+                string angleResults = "ours: "+ std::to_string(grndSteerAngle) + " original: " + std::to_string(gsr.groundSteering());
+                putText(img, angleResults , Point(5, 200), cv::FONT_HERSHEY_DUPLEX, 1.0, CV_RGB(118, 185, 0), 2);
                 std::cout <<time<<"; "<<grndSteerAngle<< "; " << gsr.groundSteering() << std::endl;
                     
                 }

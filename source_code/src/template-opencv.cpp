@@ -244,7 +244,7 @@ int32_t main(int32_t argc, char **argv) {
                         double midpointRadian = calculateInverse(adLength, oppLength);
                         double midpointRadian2 = midpointRadian -(midpointRadian/2);
 
-                        if(dis > 0.04){
+                        if(dis > 0.03){
                             grndSteerAngle = 0;
                         }else{ 
                             if(midpointRadian2 > 0.4 || midpointRadian2 <-0.4){
@@ -274,7 +274,7 @@ int32_t main(int32_t argc, char **argv) {
                         double angle {calculateAngle(radian)};
                         double radian2 = radian - (radian/2);
 
-                        if(dis >0.04){
+                        if(dis >0.03){
                             grndSteerAngle = 0;
                         }else{
                             if(radian2 > 0.4 || radian2 <-0.4){

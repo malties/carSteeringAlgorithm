@@ -9,17 +9,44 @@ In order to be able to clone the repository, an SSH key is necessary. The steps 
    3. Copy your public key that has been generated and paste it into Gitlab under Your SSH Keys.
    4. Navigate into a folder where you intend to clone the repository. Do: <br>
         *$ git clone git@git.chalmers.se:courses/dit638/students/group_06.git*
+    <br>
    5. Configure your Git authentication using <br>
         *$ git config user.email " ... "* <br>
     and <br>
         *$ git config user.name " ... "*   
-   6. To run the program, follow the commands:
+    <br>
+   6. To run the program, navigate into the sourse_code folder and run the command:
         <br>
-        *$ docker load < miruna-example.tar.gz*
+        *$ docker run --rm --init --net=host --name=opendlv-vehicle-view -v $PWD:/opt/vehicle-view/recordings -v /var/run/docker.sock:/var/run/docker.sock -p 8081:8081 chalmersrevere/opendlv-vehicle-view-multi:v0.0.60*
         <br>
-        *$ docker run --rm miruna/example:latest 42*
-
-        This should print 0, meaning 42 is not a prime number.
+        From there, you can go to
+        <br>
+        http://localhost:8081/
+        <br>
+        And click on the folder to select a video clip to be analyzed. 
+        <br>     
+    7.Open a new terminal window in the same directory and run the command:
+        <br>
+        *$ docker build https://github.com/chalmers-revere/opendlv-video-h264-decoder.git#v0.0.3 -f Dockerfile.amd64 -t h264decoder:v0.0.3*
+        To download the h264Decoder if you don't have it on your machine, followed by:
+        <br>
+        *$ xhost +*
+        <br>
+        In order to allow access to the shared memory. Followed by: 
+        <br>
+        *$ docker run --rm -ti --net=host --ipc=host -e DISPLAY=$DISPLAY -v /tmp:/tmp h264decoder:v0.0.3 --cid=253 --name=img*
+        <br>
+        To start the h264Decoder
+        <br>
+    8. Open a new terminal window in the same directory and run the commands:
+        <br>
+    *$ docker build -f Dockerfile -t my-opencv-example .*
+        <br>
+        then run: 
+    <br>
+    *$ docker run --rm -ti --net=host --ipc=host -e DISPLAY=$DISPLAY -v /tmp:/tmp my-opencv-example:latest --cid=253 --name=img --width=640 --height=480 --verbose*
+        <br>
+    To start the microservice
 
 ## Working conventions and policies
    1. Features should be added only upon group discussions and agreement to improve the system.

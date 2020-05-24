@@ -106,8 +106,9 @@ int32_t main(int32_t argc, char **argv) {
             
             std::mutex gsrMutex;
             std::int32_t time;
+            std::int32_t sec;
            
-            auto onGroundSteeringRequest = [&gsr, &gsrMutex,&time, &grndSteerAngle](cluon::data::Envelope &&env){
+            auto onGroundSteeringRequest = [&gsr, &gsrMutex,&time, &grndSteerAngle,&sec](cluon::data::Envelope &&env){
                 // The  envelope data structure provide further details, such as sampleTimePoint as shown in this test case:
                 // https://github.com/chrberger/libcluon/blob/master/libcluon/testsuites/TestEnvelopeConverter.cpp#L31-L40
                 std::lock_guard<std::mutex> lck(gsrMutex);
@@ -116,7 +117,8 @@ int32_t main(int32_t argc, char **argv) {
                // std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
                 //std::cout<< "At timeStamp= "<< env.sampleTimeStamp().seconds()<< " the groundSteering angle is: "<<  grndSteerAngle <<" original: " << gsr.groundSteering()<<std::endl;
                 //std::cout<< env.sampleTimeStamp().seconds()<< " "<<  grndSteerAngle <<"; "<< gsr.groundSteering()<<std::endl;
-                time= env.sampleTimeStamp().seconds();
+                sec= env.sampleTimeStamp().seconds();
+                time= env.sampleTimeStamp().microseconds();
             };
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(),onGroundSteeringRequest);
             
@@ -302,7 +304,7 @@ int32_t main(int32_t argc, char **argv) {
                 std::lock_guard<std::mutex> lck(gsrMutex);
                 string angleResults = "ours: "+ std::to_string(grndSteerAngle) + " original: " + std::to_string(gsr.groundSteering());
                 putText(img, angleResults , Point(5, 200), cv::FONT_HERSHEY_DUPLEX, 1.0, CV_RGB(118, 185, 0), 2);
-                std::cout <<time<<"; "<<grndSteerAngle<< "; " << gsr.groundSteering() << std::endl;
+                std::cout <<"group_06;"<<sec<<time<<";"<<grndSteerAngle<< std::endl;
                     
                 }
                 coneDecider++;

@@ -65,7 +65,7 @@ RUN mkdir build && \
 
 # Second stage for packaging the software into a software bundle:
 FROM ubuntu:18.04
-MAINTAINER Christian Berger "christian.berger@gu.se"
+MAINTAINER Nicholas Fisher "gusfishnir@student.gu.se"
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -81,7 +81,7 @@ RUN apt-get install -y --no-install-recommends \
         libopencv-imgproc3.2 
 
 WORKDIR /usr/bin
-COPY --from=builder /tmp/bin/template-opencv .
+COPY --from=builder /tmp/bin/steering-service .
 # This is the entrypoint when starting the Docker container; hence, this Docker image is automatically starting our software on its creation
-ENTRYPOINT ["/usr/bin/template-opencv"]
+ENTRYPOINT ["/usr/bin/steering-service"]
 

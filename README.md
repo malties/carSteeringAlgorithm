@@ -1,6 +1,10 @@
 # group_06
 
-[![pipeline status](https://git.chalmers.se/courses/dit638/students/group_06/badges/master/pipeline.svg)](https://git.chalmers.se/courses/dit638/students/group_06/commits/master)
+<a href="https://github.com/malties"> <img src="https://avatars1.githubusercontent.com/u/43722564?s=460&v=4" width="17" height="17"> Hannah Maltkvist</a> <br/>
+<a href="https://github.com/nafenk"> <img src="https://avatars0.githubusercontent.com/u/44115545?s=460&v=4" width="17" height="17"> Nafen Haj Ahmad</a> <br/>
+<a href="https://github.com/NikFisher"><img src="https://avatars1.githubusercontent.com/u/22327294?s=400&v=4" width="17" height="17"> Nicholas Fisher</a><br>
+<a href="https://github.com/mirunelle"><img src="https://avatars2.githubusercontent.com/u/11698742?s=400&u=1dbb52980b72bf736d20cbe0bd84ed4fccae464e&v=4" width="17" height="17">Miruna Botusan</a><br>
+
 
 ## How to clone and install
 In order to be able to clone the repository, an SSH key is necessary. The steps to clone and install are:

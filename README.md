@@ -1,4 +1,4 @@
-# group_06
+# A school project for calculating the steering angles for a car based off video! 
 
 <a href="https://github.com/malties"> <img src="https://avatars1.githubusercontent.com/u/43722564?s=460&v=4" width="17" height="17"> Hannah Maltkvist</a> <br/>
 <a href="https://github.com/nafenk"> <img src="https://avatars0.githubusercontent.com/u/44115545?s=460&v=4" width="17" height="17"> Nafen Haj Ahmad</a> <br/>
